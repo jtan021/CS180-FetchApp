@@ -1,0 +1,21 @@
+Arithmetic Logic Unit
+
+Leader: 
+Jonathan Tan
+
+Members:
+None
+
+Remarks:
+“000” - Unsigned Addition
+“001” - Signed Addition
+“010” - Unsigned Subtraction
+“011” - Signed Subtraction
+“100” - Bit-wise AND
+“101” - Bit-wise OR
+“110” - Bit-wise XOR
+“111” - Divide input A by 2
+
+Bugs:
+There should be no bugs now. As far as I can see after testing the sample testbench, all the resulting values are correct.
+
