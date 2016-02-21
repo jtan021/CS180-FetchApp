@@ -1,0 +1,15 @@
+<iostream>
+<cstring>
+<string>
+"./Circle.hh"
+"./Point.hh"
+"./Pegasis.hh"
+"./Bird.hh"
+"./Horse.hh"
+"./Square.hh"
+"./Rectangle.hh"
+"./Shape.hh"
+"./Unicorn.hh"
+Test
+
+$Library
