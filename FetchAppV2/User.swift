@@ -9,7 +9,7 @@
 import Foundation
 import Parse
 
-@objc class User: NSObject {
+@objc public class User: NSObject {
     var username: String = ""
     var firstName: String = ""
     var lastName: String = ""
@@ -25,8 +25,8 @@ import Parse
     var updatedPickUp: Bool = false
     let currentUser = PFUser.currentUser()
     
-    
-    init() {
+    override init() {
+        super.init()
         if currentUser?.username != nil {
             self.username = currentUser!["username"] as! String
             self.firstName = currentUser!["firstName"] as! String

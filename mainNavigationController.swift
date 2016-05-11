@@ -10,17 +10,17 @@ import UIKit
 import MapKit
 
 class mainNavigationController: UINavigationController {
-//    var pickupDropOff: Bool?
-    var activeUser: User!
-//    var chosenPlaceMark: MKPlacemark?
-//    var chosenAddress:String?
-//    var returnFromEdit:Bool = false
-//    var updatedDropOff: Bool = false
-//    var updatedPickUp: Bool = false
+    var firstOpen: Bool = true
+    var returnFromEdit: Bool = false
+    var updatedPickUp: Bool = false
+    var updatedDropOff: Bool = false
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         let destinationVC:mainVC = segue.destinationViewController as! mainVC
-        destinationVC.activeUser = self.activeUser
+        destinationVC.firstOpen = self.firstOpen
+        destinationVC.returnFromEdit = self.returnFromEdit
+        destinationVC.updatedPickUp = self.updatedPickUp
+        destinationVC.updatedDropOff = self.updatedDropOff
     }
 //        let destinationVC = DestViewController.topViewController as! mainVC
 //        if(self.returnFromEdit == true) {

@@ -73,17 +73,17 @@
 		1688FD191CDA901A00456B26 /* silentModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = silentModeCell.swift; sourceTree = "<group>"; };
 		1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchVC.swift; sourceTree = "<group>"; };
 		1688FD231CDC452900456B26 /* mapSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchTable.swift; sourceTree = "<group>"; };
-		169A56101CD9999200D97A82 /* FetchAppV2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FetchAppV2.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		169A56101CD9999200D97A82 /* FetchAppV3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FetchAppV3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		169A56131CD9999200D97A82 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		169A56151CD9999200D97A82 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		169A56181CD9999200D97A82 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		169A561A1CD9999200D97A82 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		169A561D1CD9999200D97A82 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		169A561F1CD9999200D97A82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		169A56241CD9999200D97A82 /* FetchAppV2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FetchAppV2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		169A56241CD9999200D97A82 /* FetchAppV3.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FetchAppV3.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		169A56281CD9999200D97A82 /* FetchAppV2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchAppV2Tests.swift; sourceTree = "<group>"; };
 		169A562A1CD9999200D97A82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		169A562F1CD9999200D97A82 /* FetchAppV2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FetchAppV2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		169A562F1CD9999200D97A82 /* FetchAppV3.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FetchAppV3.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		169A56331CD9999200D97A82 /* FetchAppV2UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchAppV2UITests.swift; sourceTree = "<group>"; };
 		169A56351CD9999200D97A82 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		169A56431CD99AB300D97A82 /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
@@ -201,9 +201,9 @@
 		169A56111CD9999200D97A82 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				169A56101CD9999200D97A82 /* FetchAppV2.app */,
-				169A56241CD9999200D97A82 /* FetchAppV2Tests.xctest */,
-				169A562F1CD9999200D97A82 /* FetchAppV2UITests.xctest */,
+				169A56101CD9999200D97A82 /* FetchAppV3.app */,
+				169A56241CD9999200D97A82 /* FetchAppV3.xctest */,
+				169A562F1CD9999200D97A82 /* FetchAppV3.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -310,9 +310,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		169A560F1CD9999200D97A82 /* FetchAppV2 */ = {
+		169A560F1CD9999200D97A82 /* FetchAppV3 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 169A56381CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2" */;
+			buildConfigurationList = 169A56381CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3" */;
 			buildPhases = (
 				169A560C1CD9999200D97A82 /* Sources */,
 				169A560D1CD9999200D97A82 /* Frameworks */,
@@ -322,14 +322,14 @@
 			);
 			dependencies = (
 			);
-			name = FetchAppV2;
+			name = FetchAppV3;
 			productName = FetchAppV2;
-			productReference = 169A56101CD9999200D97A82 /* FetchAppV2.app */;
+			productReference = 169A56101CD9999200D97A82 /* FetchAppV3.app */;
 			productType = "com.apple.product-type.application";
 		};
-		169A56231CD9999200D97A82 /* FetchAppV2Tests */ = {
+		169A56231CD9999200D97A82 /* FetchAppV3Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 169A563B1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2Tests" */;
+			buildConfigurationList = 169A563B1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3Tests" */;
 			buildPhases = (
 				169A56201CD9999200D97A82 /* Sources */,
 				169A56211CD9999200D97A82 /* Frameworks */,
@@ -340,14 +340,14 @@
 			dependencies = (
 				169A56261CD9999200D97A82 /* PBXTargetDependency */,
 			);
-			name = FetchAppV2Tests;
+			name = FetchAppV3Tests;
 			productName = FetchAppV2Tests;
-			productReference = 169A56241CD9999200D97A82 /* FetchAppV2Tests.xctest */;
+			productReference = 169A56241CD9999200D97A82 /* FetchAppV3.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		169A562E1CD9999200D97A82 /* FetchAppV2UITests */ = {
+		169A562E1CD9999200D97A82 /* FetchAppV3UITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 169A563E1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2UITests" */;
+			buildConfigurationList = 169A563E1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3UITests" */;
 			buildPhases = (
 				169A562B1CD9999200D97A82 /* Sources */,
 				169A562C1CD9999200D97A82 /* Frameworks */,
@@ -358,9 +358,9 @@
 			dependencies = (
 				169A56311CD9999200D97A82 /* PBXTargetDependency */,
 			);
-			name = FetchAppV2UITests;
+			name = FetchAppV3UITests;
 			productName = FetchAppV2UITests;
-			productReference = 169A562F1CD9999200D97A82 /* FetchAppV2UITests.xctest */;
+			productReference = 169A562F1CD9999200D97A82 /* FetchAppV3.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -389,7 +389,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 169A560B1CD9999200D97A82 /* Build configuration list for PBXProject "FetchAppV2" */;
+			buildConfigurationList = 169A560B1CD9999200D97A82 /* Build configuration list for PBXProject "FetchAppV3" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -402,9 +402,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				169A560F1CD9999200D97A82 /* FetchAppV2 */,
-				169A56231CD9999200D97A82 /* FetchAppV2Tests */,
-				169A562E1CD9999200D97A82 /* FetchAppV2UITests */,
+				169A560F1CD9999200D97A82 /* FetchAppV3 */,
+				169A56231CD9999200D97A82 /* FetchAppV3Tests */,
+				169A562E1CD9999200D97A82 /* FetchAppV3UITests */,
 			);
 		};
 /* End PBXProject section */
@@ -482,12 +482,12 @@
 /* Begin PBXTargetDependency section */
 		169A56261CD9999200D97A82 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 169A560F1CD9999200D97A82 /* FetchAppV2 */;
+			target = 169A560F1CD9999200D97A82 /* FetchAppV3 */;
 			targetProxy = 169A56251CD9999200D97A82 /* PBXContainerItemProxy */;
 		};
 		169A56311CD9999200D97A82 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 169A560F1CD9999200D97A82 /* FetchAppV2 */;
+			target = 169A560F1CD9999200D97A82 /* FetchAppV3 */;
 			targetProxy = 169A56301CD9999200D97A82 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -533,6 +533,8 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -552,7 +554,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_MODULE_NAME = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "FetchAppV3-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -578,6 +583,8 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -590,7 +597,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_MODULE_NAME = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "FetchAppV3-Swift.h";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -609,8 +619,9 @@
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "FetchAppV2/FetchAppV2-Bridging-Header.h";
+				PRODUCT_MODULE_NAME = FetchAppV2;
+				PRODUCT_NAME = FetchAppV3;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/FetchAppV2/FetchAppV2-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -629,8 +640,9 @@
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "FetchAppV2/FetchAppV2-Bridging-Header.h";
+				PRODUCT_MODULE_NAME = FetchAppV2;
+				PRODUCT_NAME = FetchAppV3;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/FetchAppV2/FetchAppV2-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -641,8 +653,8 @@
 				INFOPLIST_FILE = FetchAppV2Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FetchAppV2.app/FetchAppV2";
+				PRODUCT_NAME = FetchAppV3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FetchAppV3.app/FetchAppV3";
 			};
 			name = Debug;
 		};
@@ -653,8 +665,8 @@
 				INFOPLIST_FILE = FetchAppV2Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2Tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FetchAppV2.app/FetchAppV2";
+				PRODUCT_NAME = FetchAppV3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FetchAppV3.app/FetchAppV3";
 			};
 			name = Release;
 		};
@@ -664,7 +676,7 @@
 				INFOPLIST_FILE = FetchAppV2UITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2UITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = FetchAppV3;
 				TEST_TARGET_NAME = FetchAppV2;
 			};
 			name = Debug;
@@ -675,7 +687,7 @@
 				INFOPLIST_FILE = FetchAppV2UITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2UITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = FetchAppV3;
 				TEST_TARGET_NAME = FetchAppV2;
 			};
 			name = Release;
@@ -683,7 +695,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		169A560B1CD9999200D97A82 /* Build configuration list for PBXProject "FetchAppV2" */ = {
+		169A560B1CD9999200D97A82 /* Build configuration list for PBXProject "FetchAppV3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				169A56361CD9999200D97A82 /* Debug */,
@@ -692,7 +704,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		169A56381CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2" */ = {
+		169A56381CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				169A56391CD9999200D97A82 /* Debug */,
@@ -701,7 +713,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		169A563B1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2Tests" */ = {
+		169A563B1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				169A563C1CD9999200D97A82 /* Debug */,
@@ -710,7 +722,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		169A563E1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV2UITests" */ = {
+		169A563E1CD9999200D97A82 /* Build configuration list for PBXNativeTarget "FetchAppV3UITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				169A563F1CD9999200D97A82 /* Debug */,

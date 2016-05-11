@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "169A560F1CD9999200D97A82"
-               BuildableName = "FetchAppV2.app"
-               BlueprintName = "FetchAppV2"
-               ReferencedContainer = "container:FetchAppV2.xcodeproj">
+               BuildableName = "FetchAppV3.app"
+               BlueprintName = "FetchAppV3"
+               ReferencedContainer = "container:FetchAppV3.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "169A56231CD9999200D97A82"
-               BuildableName = "FetchAppV2Tests.xctest"
-               BlueprintName = "FetchAppV2Tests"
-               ReferencedContainer = "container:FetchAppV2.xcodeproj">
+               BuildableName = "FetchAppV3.xctest"
+               BlueprintName = "FetchAppV3Tests"
+               ReferencedContainer = "container:FetchAppV3.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -43,9 +43,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "169A562E1CD9999200D97A82"
-               BuildableName = "FetchAppV2UITests.xctest"
-               BlueprintName = "FetchAppV2UITests"
-               ReferencedContainer = "container:FetchAppV2.xcodeproj">
+               BuildableName = "FetchAppV3.xctest"
+               BlueprintName = "FetchAppV3UITests"
+               ReferencedContainer = "container:FetchAppV3.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -53,9 +53,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "169A560F1CD9999200D97A82"
-            BuildableName = "FetchAppV2.app"
-            BlueprintName = "FetchAppV2"
-            ReferencedContainer = "container:FetchAppV2.xcodeproj">
+            BuildableName = "FetchAppV3.app"
+            BlueprintName = "FetchAppV3"
+            ReferencedContainer = "container:FetchAppV3.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -76,9 +76,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "169A560F1CD9999200D97A82"
-            BuildableName = "FetchAppV2.app"
-            BlueprintName = "FetchAppV2"
-            ReferencedContainer = "container:FetchAppV2.xcodeproj">
+            BuildableName = "FetchAppV3.app"
+            BlueprintName = "FetchAppV3"
+            ReferencedContainer = "container:FetchAppV3.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -95,9 +95,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "169A560F1CD9999200D97A82"
-            BuildableName = "FetchAppV2.app"
-            BlueprintName = "FetchAppV2"
-            ReferencedContainer = "container:FetchAppV2.xcodeproj">
+            BuildableName = "FetchAppV3.app"
+            BlueprintName = "FetchAppV3"
+            ReferencedContainer = "container:FetchAppV3.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

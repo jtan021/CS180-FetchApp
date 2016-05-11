@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import Parse
 
 protocol mapSearchHandler {
     func getAddress(placemark:MKPlacemark)
@@ -16,13 +17,15 @@ protocol mapSearchHandler {
 class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     let locationManager = CLLocationManager()
     var searchBar: UISearchBar?
-    var chosenAddress:String?
+    var chosenAddress:String = ""
+    var chosenCoordinate: CLLocationCoordinate2D?
     var chosenPlaceMark: MKPlacemark? = nil
     var resultSearchController:UISearchController? = nil
     var geoCoder: CLGeocoder?
     var didMove:Bool = false
     var pickupDropOff: Bool?
     var activeUser: User!
+    var currentUser = PFUser.currentUser()
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapPin: UIImageView!
@@ -81,14 +84,20 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(activeUser.pickupAddress)
-        print(activeUser.dropoffAddress)
         // Setup search bar and link to mapSearchTable
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
         geoCoder = CLGeocoder()
+        if(self.chosenAddress != "") {
+            searchBar?.text = self.chosenAddress
+            print(self.chosenAddress)
+            print(self.chosenCoordinate)
+            self.mapView!.centerCoordinate = self.chosenCoordinate!
+            let reg = MKCoordinateRegionMakeWithDistance(self.chosenCoordinate!, 1500, 1500)
+            self.mapView!.setRegion(reg, animated: true)
+        }
         
         // Setup search bar and locationSearchTable and link them
         let locationSearchTable = storyboard!.instantiateViewControllerWithIdentifier("mapSearchTable") as! mapSearchTable
@@ -110,26 +119,54 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
         self.mapView.addGestureRecognizer(panRecognizer)
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue!, sender: AnyObject!) {
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         if (segue.identifier == "returnFromEditSegue") {
-            //get a reference to the destination view controller
-            let DestViewController = segue.destinationViewController as! UINavigationController
-            let destinationVC = DestViewController.topViewController as! mainVC
-            if(pickupDropOff == true) { // Pickup = false, drop off = true
-                //destinationVC.dropoffLabel.text = self.chosenAddress!
-                self.activeUser.dropoffAddress = self.chosenAddress!
-                self.activeUser.dropoffCoordinate = chosenPlaceMark!.coordinate
-                self.activeUser.updatedDropOff = true
-            } else if (pickupDropOff == false) {
-                //destinationVC.pickupLabel.text = self.chosenAddress!
-                self.activeUser.pickupAddress = self.chosenAddress!
-                self.activeUser.pickupCoordinate = chosenPlaceMark!.coordinate
-                self.activeUser.updatedPickUp = true
+            let destinationVC:SWRevealViewController = segue.destinationViewController as! SWRevealViewController
+            
+            // 1) Verify user
+            if currentUser != nil {
+                // 2) Check if user has used the application before and a user object exists in the database already.
+                var query = PFQuery(className: "rider")
+                query.whereKey("username", equalTo:currentUser!.username!)
+                query.getFirstObjectInBackgroundWithBlock {
+                    (object: PFObject?, error: NSError?) -> Void in
+                    if error != nil {
+                        // Error occured
+                        print("Error: \(error!) \(error!.description)")
+                    } else if object == nil {
+                        // User has not used the application before and thus a user object does not yet exist
+                        // Create the user an object
+                        print("User has not used the application yet. Creating new object in database...")
+                    } else {
+                        // The search succeeded.
+                        if(self.pickupDropOff == true) { // Pickup = false, drop off = true
+                            //destinationVC.dropoffLabel.text = self.chosenAddress!
+                            object!["dropoffAddress"] = self.chosenAddress
+                            object!["dropoffCoordinateLAT"] = self.chosenPlaceMark!.coordinate.latitude
+                            object!["dropoffCoordinateLONG"] = self.chosenPlaceMark!.coordinate.longitude
+//                            destinationVC.updatedDropOff = true
+                        } else if (self.pickupDropOff == false) {
+                            //destinationVC.pickupLabel.text = self.chosenAddress!
+                            object!["pickupAddress"] = self.chosenAddress
+                            object!["pickupCoordinateLAT"] = self.chosenPlaceMark!.coordinate.latitude
+                            object!["pickupCoordinateLONG"] = self.chosenPlaceMark!.coordinate.longitude
+//                            destinationVC.updatedPickUp = true
+                        }
+                        
+                        print("User has used the application before. Saving object in database.")
+                        object!.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("Object has been saved")
+                            } else {
+                                print("Error: \(error!) \(error!.description)")
+                            }
+                        }
+                    }
+                }
             }
-            self.activeUser.firstOpen = false
-            self.activeUser.returnFromEdit = true
-            destinationVC.activeUser = self.activeUser
-            //destinationVC.menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
+            destinationVC.firstOpen = false
+            destinationVC.returnFromEdit = true
         }
     }
 }

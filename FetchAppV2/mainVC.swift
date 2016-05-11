@@ -24,17 +24,24 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var currentLocation = CLLocation()
     var geoCoder: CLGeocoder?
     var PickUpDropOff: Bool = false // pickUp = false, dropOff = true
-    var pickupAddressVar: String?
-    var dropoffAddressVar: String?
-    var updatedPickUp:Bool = false
-    var updatedDropOff:Bool = false
-    var firstTime:Bool = true
-    var activeUser: User!
-    var pickupCoordinate: CLLocationCoordinate2D?
-    var dropoffCoordinate: CLLocationCoordinate2D?
+    var activeUser: User = User()
     var distance: Double?
     var requestCancel: Bool = false // request = false, cancel = true
+    
+    var updatedPickUp:Bool = false
+    var updatedDropOff:Bool = false
+    var firstOpen:Bool = true
     var returnFromEdit: Bool = false
+    var currentUser = PFUser.currentUser()
+    var pickupCoordinateLAT: Double?
+    var pickupCoordinateLONG: Double?
+    var dropoffCoordinateLAT: Double?
+    var dropoffCoordinateLONG: Double?
+    var pickupAddressVar: String?
+    var dropoffAddressVar: String?
+    var pickupCoordinate: CLLocationCoordinate2D?
+    var dropoffCoordinate: CLLocationCoordinate2D?
+    var chosenPlaceMark: MKPlacemark? = nil
     /*
      * Outlets
      */
@@ -155,11 +162,19 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             let addrList = addressDict["FormattedAddressLines"] as! [String]
             let address = addrList.joinWithSeparator(", ")
             print(address)
-            self.pickupAddress.text = address
-            self.pickupAddressVar = address
-            self.activeUser!.pickupAddress = address
+            self.activeUser.pickupAddress = address
             self.locationManager.stopUpdatingLocation()
             self.activeUser.pickupCoordinate = location.coordinate
+            
+            self.pickupAddress.text = address
+            self.pickupAddressVar = address
+            self.pickupCoordinateLAT = location.coordinate.latitude
+            self.pickupCoordinateLONG = location.coordinate.longitude
+            
+            // Save pickup to ParseDB
+            self.saveStringToParseDB("rider", dataName: "pickupAddress", newValue: address)
+            self.saveDoubleToParseDB("rider", dataName: "pickupCoordinateLAT", newValue: self.pickupCoordinateLAT!)
+            self.saveDoubleToParseDB("rider", dataName: "pickupCoordinateLONG", newValue: self.pickupCoordinateLONG!)
         })
     }
     
@@ -174,6 +189,147 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         // do select
+    }
+    
+    func searchParseDBforString(className:String, dataName: String) -> String {
+        var foundValue: String = ""
+        if currentUser != nil {
+            // 2) Check if user has used the application before and a user object exists in the database already.
+            let query = PFQuery(className: className)
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // The find succeeded.
+                    foundValue = object![dataName] as! String
+                    print("Found value = \(foundValue)")
+                }
+            }
+        }
+        
+        if(foundValue != "") {
+            return foundValue
+        } else {
+            return "Error: Username not authorized."
+        }
+    }
+    
+    func updateInfoFromDB() -> Void {
+        if currentUser != nil {
+            // 2) Check if user has used the application before and a user object exists in the database already.
+            let query = PFQuery(className: "rider")
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    self.pickupAddressVar = (object!["pickupAddress"] as! String)
+                    self.pickupCoordinateLAT = (object!["pickupCoordinateLAT"] as! Double)
+                    self.pickupCoordinateLONG = (object!["pickupCoordinateLONG"] as! Double)
+                    self.dropoffAddressVar = (object!["dropoffAddress"] as! String)
+                    self.dropoffCoordinateLAT = (object!["dropoffCoordinateLAT"] as! Double)
+                    self.dropoffCoordinateLONG = (object!["dropoffCoordinateLONG"] as! Double)
+                    print("New local variables: \n")
+                    print("pickupAddress = \(self.pickupAddressVar)\npickupCoordinateLAT = \(self.pickupCoordinateLAT)\npickupCoordinateLONG = \(self.pickupCoordinateLONG)\n")
+                    print("dropoffAddress = \(self.dropoffAddressVar)\ndropoffCoordinateLAT = \(self.dropoffCoordinateLAT)\ndropoffCoordinateLONG = \(self.dropoffCoordinateLONG)\n")
+                    
+                    self.pickupAddress.text = self.pickupAddressVar
+                    self.dropoffAddress.text = self.dropoffAddressVar
+                    self.pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
+                    self.dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
+                    
+                    print("pickup:\(self.pickupAddress.text!)")
+                    print("drop:\(self.dropoffAddress.text!)")
+                    if(self.pickupCoordinate != nil && self.dropoffCoordinate != nil) {
+                        self.updateDistance(self.pickupCoordinate!, coordinate2: self.dropoffCoordinate!)
+                    }
+                }
+            }
+        }
+    }
+    
+    func searchParseDBforDouble(className:String, dataName: String) -> Double {
+        var foundValue: Double = 0
+        if currentUser != nil {
+            // 2) Check if user has used the application before and a user object exists in the database already.
+            let query = PFQuery(className: className)
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // The find succeeded.
+                    foundValue = object![dataName] as! Double
+                }
+            }
+        }
+        
+        if(foundValue != 0) {
+            return foundValue
+        } else {
+            return 0
+        }
+    }
+    
+    func saveDoubleToParseDB(className:String, dataName: String, newValue: Double) -> Void {
+        // 1) Verify user
+        if currentUser != nil {
+            // 2) Check if user has used the application before and a user object exists in the database already.
+            var query = PFQuery(className: "rider")
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // The search succeeded.
+                    object![dataName] = newValue
+                    object!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("\(dataName) has been saved")
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func saveStringToParseDB(className:String, dataName: String, newValue: String) -> Void {
+        // 1) Verify user
+        if currentUser != nil {
+            // 2) Check if user has used the application before and a user object exists in the database already.
+            var query = PFQuery(className: "rider")
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // The search succeeded.
+                    object![dataName] = newValue
+                    object!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("\(dataName) has been saved")
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /*
@@ -263,34 +419,99 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             cancelRideButton.hidden = true
             requestRideButton.hidden = false
         }
+        
         // Setup slide out menu
         // Get user's current location
-        if(self.activeUser.updatedPickUp == true) {
-            pickupAddress.text = activeUser!.pickupAddress
-            dropoffAddress.text = activeUser!.dropoffAddress
-            self.activeUser.updatedPickUp = false
-        } else if (self.activeUser.updatedDropOff == true) {
-            pickupAddress.text = activeUser!.pickupAddress
-            dropoffAddress.text = activeUser!.dropoffAddress
-            self.activeUser.updatedDropOff = false
-        } else if (self.activeUser.firstOpen == true) {
+        if (self.firstOpen == true) {
 //            activeUser = User()
             locationManager = CLLocationManager()
             locationManager.delegate = self
             locationManager.startUpdatingLocation()
             geoCoder = CLGeocoder()
-            self.activeUser.firstOpen = false
+            
+            // 1) Check that user exists
+            if currentUser != nil {
+                // 2) Check if user has used the application before and a user object exists in the database already.
+                let request = PFObject(className: "rider")
+                request["username"] = currentUser!.username!
+                request["pickupAddress"] = ""
+                request["pickupCoordinateLAT"] = 0
+                request["pickupCoordinateLONG"] = 0
+                request["dropoffAddress"] = ""
+                request["dropoffCoordinateLAT"] = 0
+                request["dropoffCoordinateLONG"] = 0
+                request["driver"] = ""
+                request["status"] = "inactive"
+                
+                
+                /* Uncomment on first run to create class
+                request.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("Object has been saved")
+                    } else {
+                        print("Error: \(error!) \(error!.description)")
+                    }
+                }
+                */
+                
+                var query = PFQuery(className: "rider")
+                query.whereKey("username", equalTo:currentUser!.username!)
+                query.getFirstObjectInBackgroundWithBlock {
+                    (object: PFObject?, error: NSError?) -> Void in
+                    if error != nil {
+                        // Error occured
+                        print("Error: \(error!) \(error!.description)")
+                    } else if object == nil {
+                        // User has not used the application before and thus a user object does not yet exist
+                        // Create the user an object
+                        print("User has not used the application yet. Creating new object in database...")
+                        request.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("Object has been saved")
+                            } else {
+                                print("Error: \(error!) \(error!.description)")
+                            }
+                        }
+                    } else {
+                        // The find succeeded.
+                        print("User has used the application before.")
+                    }
+                }
+            }
+            self.firstOpen = false
+            
+        } else if (self.returnFromEdit == true) {
+            self.updateInfoFromDB()
+            self.returnFromEdit = false
+//            pickupAddress.text = self.pickupAddressVar
+//            dropoffAddress.text = self.dropoffAddressVar
+//            pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
+//            dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
+//            self.returnFromEdit = false
         }
-        
-        print("pickup:\(self.activeUser.pickupCoordinate)")
-        print("drop:\(self.activeUser.dropoffCoordinate)")
-        if(self.activeUser.pickupCoordinate != nil && self.activeUser.dropoffCoordinate != nil) {
-            self.updateDistance(self.activeUser!.pickupCoordinate!, coordinate2: self.activeUser!.dropoffCoordinate!)
-        }
+//        
+//        print("pickup:\(pickupAddress.text)")
+//        print("drop:\(dropoffAddress.text)")
+//        if(self.activeUser.pickupCoordinate != nil && self.activeUser.dropoffCoordinate != nil) {
+//            self.updateDistance(self.activeUser.pickupCoordinate!, coordinate2: self.activeUser.dropoffCoordinate!)
+//        }
         
     }
     
+    override func viewWillAppear(animated: Bool) {
+        if(self.returnFromEdit == true) {
+            print("Updated will")
+            self.updateInfoFromDB()
+        }
+    }
+    
     override func viewDidAppear(animated: Bool) {
+        if(self.returnFromEdit == true) {
+            print("Updated did")
+            self.updateInfoFromDB()
+        }
         menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
 //        if(updatedPickUp == true) {
 //            pickupAddress.text = pickupAddressVar
@@ -309,6 +530,29 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             let targetController = DestViewController.topViewController as! mapSearchVC
             targetController.pickupDropOff = self.PickUpDropOff
             targetController.activeUser = self.activeUser
+            if(PickUpDropOff == true) {
+                // User selected to edit drop-off so set placemark to current dropoff
+                // First check if there is a previously selected dropoff location
+                // If yes, use that one
+                // If no, use default current location (AKA Do nothing)
+                if(dropoffAddress.text != "") {
+                    targetController.chosenAddress = dropoffAddress.text!
+                    print(self.dropoffCoordinateLAT!)
+                    print(self.dropoffCoordinateLONG!)
+                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
+                }
+            } else if (PickUpDropOff == false) {
+                // User selected to edit pick-up so set placemark to current placemark
+                // First check if there is a previously selected pickup location
+                // If yes, use that one
+                // If no, use default current location (AKA Do nothing)
+                if(pickupAddress.text != "") {
+                    targetController.chosenAddress = pickupAddress.text!
+                    print(self.pickupCoordinateLAT!)
+                    print(self.pickupCoordinateLONG!)
+                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
+                }
+            }
         }
     }
 }
