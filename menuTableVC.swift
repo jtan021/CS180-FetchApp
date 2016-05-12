@@ -12,11 +12,22 @@ import Parse
 class menuTableVC: UITableViewController {
     var menuItems: [AnyObject] = []
     var silentMode: Bool = false
-
+    
     /*
     * Custom functions
     */
+    // displayAlert
+    // Inputs: title:String, message:String
+    // Output: UIAlertAction
+    func displayAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle:  UIAlertControllerStyle.Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+        self.presentViewController(alert, animated: true, completion: nil)
+    }
     
+    /*
+     * Overrided functions
+     */
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // Return the number of sections.
         return 1
@@ -28,12 +39,12 @@ class menuTableVC: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cellIdentifier: String = menuItems[indexPath.row] as! String
+        let cellIdentifier: String = menuItems[indexPath.row] as! String
         if(indexPath.row == 1) {
             let silentCell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! silentModeCell
             return silentCell
         } else {
-            var cell: UITableViewCell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath)
+            let cell: UITableViewCell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath)
             return cell
         }
     }
@@ -47,12 +58,14 @@ class menuTableVC: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        let currentUser = PFUser.currentUser()
+        
         if(indexPath.row == 0) {
             // Do profile stuff
         } else if (indexPath.row == 1) {
             // Do Silent mode
             print("silent mode")
-            var silentCell = tableView.dequeueReusableCellWithIdentifier("silentMode", forIndexPath: indexPath) as! silentModeCell
+            let silentCell = tableView.dequeueReusableCellWithIdentifier("silentMode", forIndexPath: indexPath) as! silentModeCell
             if(silentMode) {
                 print("Off")
                 silentCell.silentModeLabel.text = "Silent Mode: OFF"
@@ -75,11 +88,53 @@ class menuTableVC: UITableViewController {
             // Show settings
         } else if (indexPath.row == 5) {
             // log out
-            PFUser.logOut()
-            let currentUser = PFUser.currentUser()
-            print(currentUser)
-            print("\nLogout Successful\n")
-            self.performSegueWithIdentifier("successfulLogoutSegue", sender: self)
+            
+            // Check status of user in database "rider" class
+            // 1) Authenticate user
+            if currentUser != nil {
+                // 2) Search for user in rider class
+                let query = PFQuery(className: "rider")
+                query.whereKey("username", equalTo:currentUser!.username!)
+                query.getFirstObjectInBackgroundWithBlock {
+                    (object: PFObject?, error: NSError?) -> Void in
+                    if error != nil || object == nil {
+                        // Error occured
+                        print("Error: \(error!) \(error!.description)")
+                    } else {
+                        // 3) Check if status == inactive
+                        let status = object!["status"] as! String
+                        if(status == "inactive") {
+                            // 3.5a) If status == inactive, log out.
+                            PFUser.logOut()
+                            let currentUser = PFUser.currentUser()
+                            print(currentUser)
+                            print("\nLogout Successful\n")
+                            self.performSegueWithIdentifier("successfulLogoutSegue", sender: self)
+                        } else {
+                            // 3.5b) If status != inacitve, alert user and ask to set status to inactive and continue log out
+                            let alert = UIAlertController(title: "Ride pending", message: "You are currently searching for a ride. Would you like to cancel your search and continue logging out?", preferredStyle:  UIAlertControllerStyle.Alert)
+                            alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
+                                object!["status"] = "inactive"
+                                object!.saveInBackgroundWithBlock {
+                                    (success: Bool, error: NSError?) -> Void in
+                                    if (success) {
+                                        print("Status set to inactive")
+                                    } else {
+                                        print("Error: \(error!) \(error!.description)")
+                                    }
+                                }
+                                PFUser.logOut()
+                                let currentUser = PFUser.currentUser()
+                                print(currentUser)
+                                print("\nLogout Successful\n")
+                                self.performSegueWithIdentifier("successfulLogoutSegue", sender: self)
+                            }))
+                            alert.addAction(UIAlertAction(title: "No", style: UIAlertActionStyle.Default, handler: nil))
+                            self.presentViewController(alert, animated: true, completion: nil)
+                        }
+                    }
+                }
+            }
         }
     }
     

@@ -26,8 +26,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import "SWRevealViewController.h"
+#import <Parse/Parse.h>
 #import "FetchAppV3-Swift.h"
-
 #pragma mark - StatusBar Helper Function
 
 // computes the required offset adjustment due to the status bar for the passed in view,
@@ -57,7 +57,6 @@ static CGFloat statusBarAdjustment( UIView* view )
 @property (nonatomic, readonly) UIView *rightView;
 @property (nonatomic, readonly) UIView *frontView;
 @property (nonatomic, assign) BOOL disableLayout;
-//@property (nonatomic, assign) User* activeUser;
 @end
 
 
@@ -677,6 +676,11 @@ const int FrontViewPositionNone = 0xff;
     _returnFromEdit = NO;
     _updatedPickUp = NO;
     _updatedDropOff = NO;
+    _pickupDropOff = NO;
+    _pickupAddress = @"";
+    _pickupCoordinate = CLLocationCoordinate2DMake(0, 0);
+    _dropoffAddress = @"";
+    _dropoffCoordinate = CLLocationCoordinate2DMake(0, 0);
 }
 
 
@@ -1913,15 +1917,15 @@ NSString * const SWSegueRightIdentifier = @"sw_right";
     NSLog(@"prepareForSegue: %@", segue.identifier);
     if([segue.identifier isEqualToString:SWSegueFrontIdentifier])
     {
-        mainNavigationController *nav = [segue destinationViewController];
+        UINavigationController *nav = [segue destinationViewController];
         mainVC *destinationVC = (mainVC *)[nav topViewController];
         
         destinationVC.firstOpen = _firstOpen;
         destinationVC.returnFromEdit = _returnFromEdit;
-//        destinationVC.updatedPickUp = _updatedPickUp;
-//        destinationVC.updatedDropOff = _updatedDropOff;
-        
-        //destinationVC.activeUser = activeUser; //Funnily enough, this one works
+        destinationVC.pickupAddressVar = _pickupAddress;
+        destinationVC.pickupCoordinate = _pickupCoordinate;
+        destinationVC.dropoffAddressVar = _dropoffAddress;
+        destinationVC.dropoffCoordinate = _dropoffCoordinate;
     }
 }
 

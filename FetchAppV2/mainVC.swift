@@ -24,24 +24,23 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var currentLocation = CLLocation()
     var geoCoder: CLGeocoder?
     var PickUpDropOff: Bool = false // pickUp = false, dropOff = true
-    var activeUser: User = User()
     var distance: Double?
     var requestCancel: Bool = false // request = false, cancel = true
-    
     var updatedPickUp:Bool = false
     var updatedDropOff:Bool = false
     var firstOpen:Bool = true
     var returnFromEdit: Bool = false
     var currentUser = PFUser.currentUser()
-    var pickupCoordinateLAT: Double?
-    var pickupCoordinateLONG: Double?
-    var dropoffCoordinateLAT: Double?
-    var dropoffCoordinateLONG: Double?
+    var pickupCoordinateLAT: Double = 0
+    var pickupCoordinateLONG: Double = 0
+    var dropoffCoordinateLAT: Double = 0
+    var dropoffCoordinateLONG: Double = 0
     var pickupAddressVar: String?
     var dropoffAddressVar: String?
-    var pickupCoordinate: CLLocationCoordinate2D?
-    var dropoffCoordinate: CLLocationCoordinate2D?
+    var pickupCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
+    var dropoffCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
     var chosenPlaceMark: MKPlacemark? = nil
+    
     /*
      * Outlets
      */
@@ -61,9 +60,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     /*
      * Custom functions
      */
-    // displayAlert
-    // Inputs: title:String, message:String
-    // Output: UIAlertAction
+    // displayYesNoAlert
+    // Inputs: Title: String, Message: String
+    // Output: UIAlertController
+    // Function: Displays a UIAlertController with "Yes" "No" buttons to ask the user a "Yes/No" Question.
+    // Currently is not being used.
     func displayYesNoAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle:  UIAlertControllerStyle.Alert)
         alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
@@ -74,6 +75,10 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.presentViewController(alert, animated: true, completion: nil)
     }
     
+    // displayOkayAlert
+    // Inputs: Title: String, Message: String
+    // Output: UIAlertController
+    // Function: Displays a UIAlertController with an "Okay" button to show information to the user
     func displayOkayAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle:  UIAlertControllerStyle.Alert)
         alert.addAction(UIAlertAction(title: "Okay", style: UIAlertActionStyle.Default, handler: nil))
@@ -81,7 +86,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     }
     
     // DismissKeyboard()
-    // Dismisses the keyboard if areas outside of editable text are tapped
+    // Function: Dismisses the keyboard if areas outside of editable text are tapped
     func DismissKeyboard() {
         view.endEditing(true)
     }
@@ -89,7 +94,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // initStoryboard
     // Inputs: UIViewController, Storyboardname
     // Outputs: None
-    // Takes view from storyboard and shows as a subview
+    // Function: Takes view from storyboard and shows as a subview
     func initStoryboard(controller: UIViewController, storyboardName: String)
     {
         let storyboard = UIStoryboard(name: storyboardName, bundle: nil)
@@ -103,27 +108,19 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // locationManager
     // Inputs: None
     // Outputs: None
-    // Geocodes current location to obtain starting pick up address
+    // Function: Geocodes current location to obtain starting pick up address and updates the pickupCoordinate with the coordinates of the current location
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        self.locationManager.stopUpdatingLocation()
         let location: CLLocation = locations.first!
+        let coordinate: CLLocationCoordinate2D = location.coordinate
+        pickupCoordinate = CLLocationCoordinate2DMake(coordinate.latitude, coordinate.longitude)
         geoCode(location)
     }
-
-    // calculateDistance
-    // Inputs: Address 1, Address 2
-    // Outputs: Distance
-    //
-    func calculateDistance(coordinates1:CLLocationCoordinate2D, coordinates2:CLLocationCoordinate2D) -> Double {
-        var location1: CLLocation = CLLocation(latitude: coordinates1.latitude, longitude:  coordinates1.longitude)
-        var location2: CLLocation = CLLocation(latitude: coordinates2.latitude, longitude:  coordinates2.longitude)
-        return location2.distanceFromLocation(location1)
-    }
-    
     
     // updateDistance
     // Inputs: CLLocationCoordinate2D, CLLocationCoordinate2D
     // Outputs: None
-    // Updates the distance variable and distanceLabel with the driving distance between two CLLocationCooordinate2D objects
+    // Function: Updates the distance variable and distanceLabel with the driving distance between two CLLocationCooordinate2D objects
     func updateDistance(coordinate1:CLLocationCoordinate2D, coordinate2: CLLocationCoordinate2D) -> Void {
         var routeDetails: MKRoute?
         let directionsRequest: MKDirectionsRequest = MKDirectionsRequest()
@@ -150,7 +147,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Name: geoCode
     // Inputs: None
     // Outputs: None
-    // Function: reverseGeocodes the current location and updates the searchBar address
+    // Function: reverseGeocodes the current location and updates the pickupAddress label
     func geoCode(location : CLLocation!) {
         geoCoder!.cancelGeocode()
         geoCoder!.reverseGeocodeLocation(location, completionHandler: { (data, error) -> Void in
@@ -162,35 +159,39 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             let addrList = addressDict["FormattedAddressLines"] as! [String]
             let address = addrList.joinWithSeparator(", ")
             print(address)
-            self.activeUser.pickupAddress = address
-            self.locationManager.stopUpdatingLocation()
-            self.activeUser.pickupCoordinate = location.coordinate
-            
             self.pickupAddress.text = address
             self.pickupAddressVar = address
-            self.pickupCoordinateLAT = location.coordinate.latitude
-            self.pickupCoordinateLONG = location.coordinate.longitude
-            
-            // Save pickup to ParseDB
-            self.saveStringToParseDB("rider", dataName: "pickupAddress", newValue: address)
-            self.saveDoubleToParseDB("rider", dataName: "pickupCoordinateLAT", newValue: self.pickupCoordinateLAT!)
-            self.saveDoubleToParseDB("rider", dataName: "pickupCoordinateLONG", newValue: self.pickupCoordinateLONG!)
         })
     }
     
+    // Name: tableView
+    // Inputs: None
+    // Outputs: None
+    // Function: Sets the numberOfRowsInSection of table
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 1
     }
     
+    // Name: tableView
+    // Inputs: None
+    // Outputs: None
+    // Function: Updates the tableView cell with information
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("driverCell", forIndexPath: indexPath) as! availableDriverCell
         return cell
     }
     
+    // Name: tableView
+    // Inputs: None
+    // Outputs: None
+    // Function: Indicates what happens when a user selects a cell
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        // do select
+        // do select for driver
     }
     
+    // These functions are no longer being used, originally used to update the database for search for a value in the database
+    // Not tested thoroughly, functions may not completely work
+    /*
     func searchParseDBforString(className:String, dataName: String) -> String {
         var foundValue: String = ""
         if currentUser != nil {
@@ -234,108 +235,34 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     self.dropoffAddressVar = (object!["dropoffAddress"] as! String)
                     self.dropoffCoordinateLAT = (object!["dropoffCoordinateLAT"] as! Double)
                     self.dropoffCoordinateLONG = (object!["dropoffCoordinateLONG"] as! Double)
-                    print("New local variables: \n")
-                    print("pickupAddress = \(self.pickupAddressVar)\npickupCoordinateLAT = \(self.pickupCoordinateLAT)\npickupCoordinateLONG = \(self.pickupCoordinateLONG)\n")
-                    print("dropoffAddress = \(self.dropoffAddressVar)\ndropoffCoordinateLAT = \(self.dropoffCoordinateLAT)\ndropoffCoordinateLONG = \(self.dropoffCoordinateLONG)\n")
-                    
                     self.pickupAddress.text = self.pickupAddressVar
                     self.dropoffAddress.text = self.dropoffAddressVar
-                    self.pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
-                    self.dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
-                    
-                    print("pickup:\(self.pickupAddress.text!)")
-                    print("drop:\(self.dropoffAddress.text!)")
-                    if(self.pickupCoordinate != nil && self.dropoffCoordinate != nil) {
-                        self.updateDistance(self.pickupCoordinate!, coordinate2: self.dropoffCoordinate!)
+                    self.pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT, self.pickupCoordinateLONG)
+                    self.dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT, self.dropoffCoordinateLONG)
+                    if(CLLocationCoordinate2DIsValid(self.pickupCoordinate) && CLLocationCoordinate2DIsValid(self.dropoffCoordinate)) {
+                        self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
                     }
                 }
             }
         }
     }
+    */
     
-    func searchParseDBforDouble(className:String, dataName: String) -> Double {
-        var foundValue: Double = 0
-        if currentUser != nil {
-            // 2) Check if user has used the application before and a user object exists in the database already.
-            let query = PFQuery(className: className)
-            query.whereKey("username", equalTo:currentUser!.username!)
-            query.getFirstObjectInBackgroundWithBlock {
-                (object: PFObject?, error: NSError?) -> Void in
-                if error != nil || object == nil {
-                    // Error occured
-                    print("Error: \(error!) \(error!.description)")
-                } else {
-                    // The find succeeded.
-                    foundValue = object![dataName] as! Double
-                }
-            }
-        }
-        
-        if(foundValue != 0) {
-            return foundValue
-        } else {
-            return 0
-        }
-    }
-    
-    func saveDoubleToParseDB(className:String, dataName: String, newValue: Double) -> Void {
-        // 1) Verify user
-        if currentUser != nil {
-            // 2) Check if user has used the application before and a user object exists in the database already.
-            var query = PFQuery(className: "rider")
-            query.whereKey("username", equalTo:currentUser!.username!)
-            query.getFirstObjectInBackgroundWithBlock {
-                (object: PFObject?, error: NSError?) -> Void in
-                if error != nil || object == nil {
-                    // Error
-                    print("Error: \(error!) \(error!.description)")
-                } else {
-                    // The search succeeded.
-                    object![dataName] = newValue
-                    object!.saveInBackgroundWithBlock {
-                        (success: Bool, error: NSError?) -> Void in
-                        if (success) {
-                            print("\(dataName) has been saved")
-                        } else {
-                            print("Error: \(error!) \(error!.description)")
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    func saveStringToParseDB(className:String, dataName: String, newValue: String) -> Void {
-        // 1) Verify user
-        if currentUser != nil {
-            // 2) Check if user has used the application before and a user object exists in the database already.
-            var query = PFQuery(className: "rider")
-            query.whereKey("username", equalTo:currentUser!.username!)
-            query.getFirstObjectInBackgroundWithBlock {
-                (object: PFObject?, error: NSError?) -> Void in
-                if error != nil || object == nil {
-                    // Error
-                    print("Error: \(error!) \(error!.description)")
-                } else {
-                    // The search succeeded.
-                    object![dataName] = newValue
-                    object!.saveInBackgroundWithBlock {
-                        (success: Bool, error: NSError?) -> Void in
-                        if (success) {
-                            print("\(dataName) has been saved")
-                        } else {
-                            print("Error: \(error!) \(error!.description)")
-                        }
-                    }
-                }
-            }
-        }
+    // refresh
+    // Input: UIRefreshControl
+    // Output: None
+    // Function: Function for refreshing the tableview
+    func refresh(refreshControl: UIRefreshControl) {
+        refreshControl.endRefreshing()
     }
     
     /*
      * Action Functions
      */
     @IBAction func editPickUpDidTouch(sender: AnyObject) {
+        // Check that the user is not currently searching for a rider
+        // If user is, then display an alert
+        // Else, allow edit
         if(requestCancel == true) { // If request has been set
             self.displayOkayAlert("Request pending", message: "You must cancel the current request and submit a new one to change the pick-up address")
             return
@@ -345,6 +272,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     }
     
     @IBAction func editDropOffDidTouch(sender: AnyObject) {
+        // Check that the user is not currently searching for a rider
+        // If user is, then display an alert
+        // Else, allow edit
         if(requestCancel == true) { // If request has been set
             self.displayOkayAlert("Request pending", message: "You must cancel the current request and submit a new one to change the drop-off address")
             return
@@ -357,6 +287,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     }
     
     @IBAction func requestRideDidTouch(sender: AnyObject) {
+        // Check that the pickupAddress & dropoffAddress are specified
+        // If not, display an alert
         if(pickupAddress.text == "") {
             self.displayOkayAlert("Missing pick-up location", message: "Please select a pick-up adddress to continue.")
             return
@@ -365,6 +297,40 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             self.displayOkayAlert("Missing drop-off location", message: "Please select a drop-off address to continue.")
             return
         }
+        
+        // Save current info to database
+        // 1) Authenticate user
+        if currentUser != nil {
+            // 2) Search for user object in "rider" class of database
+            let query = PFQuery(className: "rider")
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // 3) User object has been found, update information in database
+                    object!["pickupAddress"] = self.pickupAddress.text!
+                    object!["pickupCoordinateLAT"] = self.pickupCoordinate.latitude
+                    object!["pickupCoordinateLONG"] = self.pickupCoordinate.longitude
+                    object!["dropoffAddress"] = self.dropoffAddress.text
+                    object!["dropoffCoordinateLAT"] = self.dropoffCoordinate.latitude
+                    object!["dropoffCoordinateLONG"] = self.dropoffCoordinate.longitude
+                    object!["driver"] = ""
+                    object!["status"] = "searching for driver"
+                    object!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("Object has been saved")
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+        
         primaryStatusLabel.text = "Searching for a driver..."
         driverArrivedButton.hidden = true
         cancelRideButton.hidden = false
@@ -372,12 +338,38 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         driverTableView.hidden = false
         selectADriverLabel.hidden = false
         requestCancel = true
-        print("request touched")
         self.displayOkayAlert("Ride request sent", message: "Searching for a friendly driver.")
         // Do request stuff
     }
     
     @IBAction func cancelRideDidTouch(sender: AnyObject) {
+        // Set the status of user to inactive in database
+        // 1) Authenticate user
+        if currentUser != nil {
+            // 2) Search for user in rider class
+            let query = PFQuery(className: "rider")
+            query.whereKey("username", equalTo:currentUser!.username!)
+            query.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    // 3) Set status to inactive
+                    object!["status"] = "inactive"
+                    object!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("Status has been set to inactive")
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Change all necessary labels & buttons
         primaryStatusLabel.text = "Waiting for user."
         driverArrivedButton.hidden = true
         cancelRideButton.hidden = true
@@ -386,7 +378,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         selectADriverLabel.hidden = true
         requestCancel = false
         requestRideButton.setTitle("Request a ride?", forState: .Normal)
-        print("cancel touched")
     }
     
     @IBAction func driverArrivedDidTouch(sender: AnyObject) {
@@ -397,11 +388,20 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
      * Overrided Functions
      */
     override func viewDidLoad() {
+        // Implement slide-out menu button
         menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
         
+        // Add refresh action to driverTableView
+        // Pull down to refresh
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(mainVC.refresh(_:)), forControlEvents: .ValueChanged)
+        driverTableView.addSubview(refreshControl)
+        
+        // Hide driverTableView and corresponding label at start
         driverTableView.hidden = true
         selectADriverLabel.hidden = true
         
+        // Hide/Show buttons depending on primaryStatusLabel
         if(primaryStatusLabel.text == "Waiting for driver.") {
             driverArrivedButton.hidden = false
             cancelRideButton.hidden = true
@@ -419,19 +419,19 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             cancelRideButton.hidden = true
             requestRideButton.hidden = false
         }
-        
-        // Setup slide out menu
-        // Get user's current location
+
+        // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
-//            activeUser = User()
+            // 1) Set pickup address & coordinate to current location
             locationManager = CLLocationManager()
             locationManager.delegate = self
             locationManager.startUpdatingLocation()
             geoCoder = CLGeocoder()
-            
-            // 1) Check that user exists
+
+            // 2) Check if the user has used the application before and therefore has a object in the "rider" class already
+            // 2.1) Authenticate user
             if currentUser != nil {
-                // 2) Check if user has used the application before and a user object exists in the database already.
+                // 2.2) Set default values for rider database variables
                 let request = PFObject(className: "rider")
                 request["username"] = currentUser!.username!
                 request["pickupAddress"] = ""
@@ -443,28 +443,17 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["driver"] = ""
                 request["status"] = "inactive"
                 
-                
-                /* Uncomment on first run to create class
-                request.saveInBackgroundWithBlock {
-                    (success: Bool, error: NSError?) -> Void in
-                    if (success) {
-                        print("Object has been saved")
-                    } else {
-                        print("Error: \(error!) \(error!.description)")
-                    }
-                }
-                */
-                
+                // 2.3) Search the "rider" class in database for the user
                 var query = PFQuery(className: "rider")
                 query.whereKey("username", equalTo:currentUser!.username!)
                 query.getFirstObjectInBackgroundWithBlock {
                     (object: PFObject?, error: NSError?) -> Void in
-                    if error != nil {
-                        // Error occured
-                        print("Error: \(error!) \(error!.description)")
-                    } else if object == nil {
-                        // User has not used the application before and thus a user object does not yet exist
-                        // Create the user an object
+                    if error == nil || object != nil {
+                        // 2.3a) User has used the application before so do not create a "rider" object for the user
+                        print("User has used the application before.")
+                    } else {
+                        // 2.3b) User has not used the application before and thus a user object does not yet exist
+                        // Create the user a "rider" object
                         print("User has not used the application yet. Creating new object in database...")
                         request.saveInBackgroundWithBlock {
                             (success: Bool, error: NSError?) -> Void in
@@ -474,62 +463,43 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 print("Error: \(error!) \(error!.description)")
                             }
                         }
-                    } else {
-                        // The find succeeded.
-                        print("User has used the application before.")
                     }
                 }
             }
+            
+            // Set firstOpen to false
             self.firstOpen = false
             
+        // If application is returning from edit view
         } else if (self.returnFromEdit == true) {
-            self.updateInfoFromDB()
+            // 1) Set returnFromEdit back to false
             self.returnFromEdit = false
-//            pickupAddress.text = self.pickupAddressVar
-//            dropoffAddress.text = self.dropoffAddressVar
-//            pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
-//            dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
-//            self.returnFromEdit = false
-        }
-//        
-//        print("pickup:\(pickupAddress.text)")
-//        print("drop:\(dropoffAddress.text)")
-//        if(self.activeUser.pickupCoordinate != nil && self.activeUser.dropoffCoordinate != nil) {
-//            self.updateDistance(self.activeUser.pickupCoordinate!, coordinate2: self.activeUser.dropoffCoordinate!)
-//        }
-        
-    }
-    
-    override func viewWillAppear(animated: Bool) {
-        if(self.returnFromEdit == true) {
-            print("Updated will")
-            self.updateInfoFromDB()
+            
+            // 2) Update the pickup and dropoff label
+            self.pickupAddress.text = self.pickupAddressVar
+            self.dropoffAddress.text = self.dropoffAddressVar
+            
+            // 3) Calculate distance if possible between pick up and drop off location
+            if(CLLocationCoordinate2DIsValid(self.pickupCoordinate) && CLLocationCoordinate2DIsValid(self.dropoffCoordinate)) {
+                self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
+            }
         }
     }
     
-    override func viewDidAppear(animated: Bool) {
-        if(self.returnFromEdit == true) {
-            print("Updated did")
-            self.updateInfoFromDB()
-        }
-        menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
-//        if(updatedPickUp == true) {
-//            pickupAddress.text = pickupAddressVar
-//            updatedPickUp = false
-//        } else if (updatedDropOff == true) {
-//            dropoffAddress.text = dropoffAddressVar
-//            updatedDropOff = false
-//        }
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue!, sender: AnyObject!) {
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         if (segue.identifier == "editAddressSegue") {
-            //get a reference to the destination view controller
-            //let destinationVC:mapSearchVC = segue.destinationViewController as! mapSearchVC
-            var DestViewController = segue.destinationViewController as! UINavigationController
+            // When performing segue to mapSearchVC
+            // Pass current pickup & dropoff address and coordinate
+            // Pass "pickupDropOff" boolean to indicate which textfield the user is editting
+            let DestViewController = segue.destinationViewController as! UINavigationController
             let targetController = DestViewController.topViewController as! mapSearchVC
             targetController.pickupDropOff = self.PickUpDropOff
-            targetController.activeUser = self.activeUser
+            targetController.pickupAddress = self.pickupAddressVar
+            targetController.pickupCoordinate = self.pickupCoordinate
+            targetController.dropoffAddress = self.dropoffAddressVar
+            targetController.dropoffCoordinate = self.dropoffCoordinate
+            
+            // Attempt to set address in next controller
             if(PickUpDropOff == true) {
                 // User selected to edit drop-off so set placemark to current dropoff
                 // First check if there is a previously selected dropoff location
@@ -537,9 +507,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 // If no, use default current location (AKA Do nothing)
                 if(dropoffAddress.text != "") {
                     targetController.chosenAddress = dropoffAddress.text!
-                    print(self.dropoffCoordinateLAT!)
-                    print(self.dropoffCoordinateLONG!)
-                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT!, self.dropoffCoordinateLONG!)
+                    print("dropoffLAT = \(self.dropoffCoordinateLAT)")
+                    print("dropoffLONG = \(self.dropoffCoordinateLONG)")
+                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT, self.dropoffCoordinateLONG)
                 }
             } else if (PickUpDropOff == false) {
                 // User selected to edit pick-up so set placemark to current placemark
@@ -548,9 +518,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 // If no, use default current location (AKA Do nothing)
                 if(pickupAddress.text != "") {
                     targetController.chosenAddress = pickupAddress.text!
-                    print(self.pickupCoordinateLAT!)
-                    print(self.pickupCoordinateLONG!)
-                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT!, self.pickupCoordinateLONG!)
+                    print("pickupLAT = \(self.pickupCoordinateLAT)")
+                    print("pickupLAT = \(self.pickupCoordinateLONG)")
+                    targetController.chosenCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT, self.pickupCoordinateLONG)
                 }
             }
         }

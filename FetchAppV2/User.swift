@@ -6,6 +6,9 @@
 //  Copyright © 2016 Jonathan Tan. All rights reserved.
 //
 
+//
+// CLASS IS NOLONGER BEING USED
+//
 import Foundation
 import Parse
 

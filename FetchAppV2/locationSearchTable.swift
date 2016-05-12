@@ -6,6 +6,10 @@
 //  Copyright © 2016 Parse. All rights reserved.
 //
 
+//
+// CLASS IS NOLONGER BEING USED
+//
+
 import Foundation
 import UIKit
 import MapKit

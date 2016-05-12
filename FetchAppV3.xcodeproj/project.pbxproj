@@ -9,8 +9,7 @@
 /* Begin PBXBuildFile section */
 		16095BA11CDD4D450065D483 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16095BA01CDD4D450065D483 /* MapKit.framework */; };
 		16095BA41CDD80E20065D483 /* availableDriverCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BA31CDD80E20065D483 /* availableDriverCell.swift */; };
-		16095BA61CE00A1B0065D483 /* SlideMenuController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BA51CE00A1B0065D483 /* SlideMenuController.swift */; };
-		16095BA81CE02DA10065D483 /* mainNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BA71CE02DA10065D483 /* mainNavigationController.swift */; };
+		16095BAE1CE2C5230065D483 /* SWRevealViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 16095BAD1CE2C5230065D483 /* SWRevealViewController.m */; };
 		1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD191CDA901A00456B26 /* silentModeCell.swift */; };
 		1688FD211CDC3C0E00456B26 /* mapSearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */; };
 		1688FD241CDC452900456B26 /* mapSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD231CDC452900456B26 /* mapSearchTable.swift */; };
@@ -37,7 +36,6 @@
 		169A565E1CD99B1C00D97A82 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 169A565D1CD99B1C00D97A82 /* SystemConfiguration.framework */; };
 		169A56601CD99B2300D97A82 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 169A565F1CD99B2300D97A82 /* libz.tbd */; };
 		169A56621CD99B2900D97A82 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 169A56611CD99B2900D97A82 /* libsqlite3.tbd */; };
-		169A56661CD99BD300D97A82 /* SWRevealViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 169A56651CD99BD300D97A82 /* SWRevealViewController.m */; };
 		169A56681CD99C9F00D97A82 /* mainVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56671CD99C9F00D97A82 /* mainVC.swift */; };
 		169A566B1CD9A4BC00D97A82 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 169A566A1CD9A4BC00D97A82 /* Default.png */; };
 		169A566E1CD9A4D700D97A82 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 169A566D1CD9A4D700D97A82 /* Default@2x.png */; };
@@ -68,8 +66,8 @@
 /* Begin PBXFileReference section */
 		16095BA01CDD4D450065D483 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		16095BA31CDD80E20065D483 /* availableDriverCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = availableDriverCell.swift; sourceTree = "<group>"; };
-		16095BA51CE00A1B0065D483 /* SlideMenuController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SlideMenuController.swift; sourceTree = "<group>"; };
-		16095BA71CE02DA10065D483 /* mainNavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mainNavigationController.swift; path = ../mainNavigationController.swift; sourceTree = "<group>"; };
+		16095BAC1CE2C51C0065D483 /* SWRevealViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWRevealViewController.h; sourceTree = "<group>"; };
+		16095BAD1CE2C5230065D483 /* SWRevealViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWRevealViewController.m; sourceTree = "<group>"; };
 		1688FD191CDA901A00456B26 /* silentModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = silentModeCell.swift; sourceTree = "<group>"; };
 		1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchVC.swift; sourceTree = "<group>"; };
 		1688FD231CDC452900456B26 /* mapSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchTable.swift; sourceTree = "<group>"; };
@@ -103,8 +101,6 @@
 		169A565F1CD99B2300D97A82 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		169A56611CD99B2900D97A82 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		169A56631CD99BD200D97A82 /* FetchAppV2-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FetchAppV2-Bridging-Header.h"; sourceTree = "<group>"; };
-		169A56641CD99BD300D97A82 /* SWRevealViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SWRevealViewController.h; path = "../../../../../../Downloads/SWRevealViewController-master 4/SWRevealViewController/SWRevealViewController.h"; sourceTree = "<group>"; };
-		169A56651CD99BD300D97A82 /* SWRevealViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SWRevealViewController.m; path = "../../../../../../Downloads/SWRevealViewController-master 4/SWRevealViewController/SWRevealViewController.m"; sourceTree = "<group>"; };
 		169A56671CD99C9F00D97A82 /* mainVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mainVC.swift; sourceTree = "<group>"; };
 		169A566A1CD9A4BC00D97A82 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = ../../../../../../Downloads/SidebarDemo/SidebarDemo/Default.png; sourceTree = "<group>"; };
 		169A566D1CD9A4D700D97A82 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "../../../../../../Downloads/SidebarDemo/SidebarDemo/Default@2x.png"; sourceTree = "<group>"; };
@@ -162,7 +158,6 @@
 			children = (
 				169A56671CD99C9F00D97A82 /* mainVC.swift */,
 				16095BA31CDD80E20065D483 /* availableDriverCell.swift */,
-				16095BA71CE02DA10065D483 /* mainNavigationController.swift */,
 			);
 			name = Main;
 			sourceTree = "<group>";
@@ -278,10 +273,9 @@
 			isa = PBXGroup;
 			children = (
 				169A566F1CD9A50E00D97A82 /* menuTableVC.swift */,
-				169A56641CD99BD300D97A82 /* SWRevealViewController.h */,
-				169A56651CD99BD300D97A82 /* SWRevealViewController.m */,
+				16095BAC1CE2C51C0065D483 /* SWRevealViewController.h */,
+				16095BAD1CE2C5230065D483 /* SWRevealViewController.m */,
 				1688FD191CDA901A00456B26 /* silentModeCell.swift */,
-				16095BA51CE00A1B0065D483 /* SlideMenuController.swift */,
 			);
 			name = Menu;
 			sourceTree = "<group>";
@@ -446,16 +440,14 @@
 			files = (
 				169A56161CD9999200D97A82 /* ViewController.swift in Sources */,
 				169A56741CD9B30700D97A82 /* loginRegisterVC.swift in Sources */,
+				16095BAE1CE2C5230065D483 /* SWRevealViewController.m in Sources */,
 				169A56681CD99C9F00D97A82 /* mainVC.swift in Sources */,
 				169A56791CD9BF3D00D97A82 /* locationSearchTable.swift in Sources */,
 				169A56141CD9999200D97A82 /* AppDelegate.swift in Sources */,
 				169A56701CD9A50E00D97A82 /* menuTableVC.swift in Sources */,
-				16095BA81CE02DA10065D483 /* mainNavigationController.swift in Sources */,
-				169A56661CD99BD300D97A82 /* SWRevealViewController.m in Sources */,
 				169A56771CD9BEB300D97A82 /* User.swift in Sources */,
 				1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */,
 				16095BA41CDD80E20065D483 /* availableDriverCell.swift in Sources */,
-				16095BA61CE00A1B0065D483 /* SlideMenuController.swift in Sources */,
 				1688FD211CDC3C0E00456B26 /* mapSearchVC.swift in Sources */,
 				1688FD241CDC452900456B26 /* mapSearchTable.swift in Sources */,
 			);

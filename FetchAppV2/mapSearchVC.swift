@@ -26,6 +26,10 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     var pickupDropOff: Bool?
     var activeUser: User!
     var currentUser = PFUser.currentUser()
+    var pickupAddress: String?
+    var pickupCoordinate: CLLocationCoordinate2D?
+    var dropoffAddress: String?
+    var dropoffCoordinate: CLLocationCoordinate2D?
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapPin: UIImageView!
@@ -58,17 +62,13 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     // Outputs: None
     // Function: If gestureRecognizer returns true, user is panning the map so hide the postJobButton. If false or panning ends, unhide the postJobButton
     func didDragMap(gestureRecognizer: UIGestureRecognizer) {
-        //        postJobButton.hidden = true
         if (!didMove) {
             mapPin.center.y -= 10
             didMove = true
-            //            mapRequestButton.hidden = true
         }
         if gestureRecognizer.state == .Ended {
-            //            postJobButton.hidden = false
             mapPin.center.y += 10
             didMove = false
-            //            mapRequestButton.hidden = false
             print("panning ended")
         }
     }
@@ -122,56 +122,36 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         if (segue.identifier == "returnFromEditSegue") {
             let destinationVC:SWRevealViewController = segue.destinationViewController as! SWRevealViewController
-            
-            // 1) Verify user
-            if currentUser != nil {
-                // 2) Check if user has used the application before and a user object exists in the database already.
-                var query = PFQuery(className: "rider")
-                query.whereKey("username", equalTo:currentUser!.username!)
-                query.getFirstObjectInBackgroundWithBlock {
-                    (object: PFObject?, error: NSError?) -> Void in
-                    if error != nil {
-                        // Error occured
-                        print("Error: \(error!) \(error!.description)")
-                    } else if object == nil {
-                        // User has not used the application before and thus a user object does not yet exist
-                        // Create the user an object
-                        print("User has not used the application yet. Creating new object in database...")
-                    } else {
-                        // The search succeeded.
-                        if(self.pickupDropOff == true) { // Pickup = false, drop off = true
-                            //destinationVC.dropoffLabel.text = self.chosenAddress!
-                            object!["dropoffAddress"] = self.chosenAddress
-                            object!["dropoffCoordinateLAT"] = self.chosenPlaceMark!.coordinate.latitude
-                            object!["dropoffCoordinateLONG"] = self.chosenPlaceMark!.coordinate.longitude
-//                            destinationVC.updatedDropOff = true
-                        } else if (self.pickupDropOff == false) {
-                            //destinationVC.pickupLabel.text = self.chosenAddress!
-                            object!["pickupAddress"] = self.chosenAddress
-                            object!["pickupCoordinateLAT"] = self.chosenPlaceMark!.coordinate.latitude
-                            object!["pickupCoordinateLONG"] = self.chosenPlaceMark!.coordinate.longitude
-//                            destinationVC.updatedPickUp = true
-                        }
-                        
-                        print("User has used the application before. Saving object in database.")
-                        object!.saveInBackgroundWithBlock {
-                            (success: Bool, error: NSError?) -> Void in
-                            if (success) {
-                                print("Object has been saved")
-                            } else {
-                                print("Error: \(error!) \(error!.description)")
-                            }
-                        }
-                    }
-                }
+            /* if pickupDropOff == false
+            *       editing pickUpAddress & pickupCoordinate
+            *  else if pickupDropOff == true
+            *       editing dropoffAddress & dropoffCoordinate
+            *  Pass unedited address & coordinate to next view controller for both cases
+            */
+            if(self.pickupDropOff == true) {
+                destinationVC.dropoffAddress = self.chosenAddress
+                destinationVC.dropoffCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
+                destinationVC.pickupAddress = self.pickupAddress!
+                destinationVC.pickupCoordinate = self.pickupCoordinate!
+                
+            } else if (self.pickupDropOff == false) {
+                destinationVC.pickupAddress = self.chosenAddress
+                destinationVC.pickupCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
+                destinationVC.dropoffAddress = self.dropoffAddress!
+                destinationVC.dropoffCoordinate = self.dropoffCoordinate!
             }
             destinationVC.firstOpen = false
             destinationVC.returnFromEdit = true
+            destinationVC.pickupDropOff = self.pickupDropOff!
         }
     }
 }
 
 extension mapSearchVC : CLLocationManagerDelegate {
+    // Name: locationManager
+    // Inputs: None
+    // Outputs: None
+    // Function: Request location of user
     func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status == .AuthorizedWhenInUse {
             locationManager.requestLocation()
@@ -222,11 +202,19 @@ extension mapSearchVC : CLLocationManagerDelegate {
         })
     }
     
+    // Name: locationManager
+    // Inputs: None
+    // Outputs: None
+    // Function: Error manager
     func locationManager(manager: CLLocationManager, didFailWithError error: NSError) {
         print("error:: \(error)")
     }
 }
 
+// Name: mapSearchHandler
+// Inputs: None
+// Outputs: None
+// Function: Zooms into the selected address from the UISearchBar & updates chosenAddress & chosenPlaceMark to the selected location
 extension mapSearchVC: mapSearchHandler {
     func getAddress(placemark:MKPlacemark) {
         self.chosenAddress = placemark.title!
