@@ -681,6 +681,7 @@ const int FrontViewPositionNone = 0xff;
     _pickupCoordinate = CLLocationCoordinate2DMake(0, 0);
     _dropoffAddress = @"";
     _dropoffCoordinate = CLLocationCoordinate2DMake(0, 0);
+    _distance = 0;
 }
 
 
@@ -1919,13 +1920,23 @@ NSString * const SWSegueRightIdentifier = @"sw_right";
     {
         UINavigationController *nav = [segue destinationViewController];
         mainVC *destinationVC = (mainVC *)[nav topViewController];
-        
         destinationVC.firstOpen = _firstOpen;
         destinationVC.returnFromEdit = _returnFromEdit;
         destinationVC.pickupAddressVar = _pickupAddress;
         destinationVC.pickupCoordinate = _pickupCoordinate;
         destinationVC.dropoffAddressVar = _dropoffAddress;
         destinationVC.dropoffCoordinate = _dropoffCoordinate;
+        destinationVC.distance = _distance;
+    } else if([segue.identifier isEqualToString:SWSegueRearIdentifier])
+    {
+        menuTableVC *destinationVC = [segue destinationViewController];
+        destinationVC.firstOpen = _firstOpen;
+        destinationVC.returnFromEdit = _returnFromEdit;
+        destinationVC.pickupAddress = _pickupAddress;
+        destinationVC.pickupCoordinate = _pickupCoordinate;
+        destinationVC.dropoffAddress = _dropoffAddress;
+        destinationVC.dropoffCoordinate = _dropoffCoordinate;
+        destinationVC.distance = _distance;
     }
 }
 

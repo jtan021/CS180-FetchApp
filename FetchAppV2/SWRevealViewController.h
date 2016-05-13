@@ -319,6 +319,7 @@ typedef NS_ENUM(NSInteger, SWRevealToggleAnimationType)
 @property (nonatomic) NSString* dropoffAddress;
 @property (nonatomic) CLLocationCoordinate2D dropoffCoordinate;
 @property (nonatomic) BOOL pickupDropOff;
+@property (nonatomic) double distance;
 
 /* The class properly handles all the relevant calls to appearance methods on the contained controllers.
    Moreover you can assign a delegate to let the class inform you on positions and animation activity */

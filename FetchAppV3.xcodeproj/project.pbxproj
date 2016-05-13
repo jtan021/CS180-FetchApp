@@ -10,6 +10,9 @@
 		16095BA11CDD4D450065D483 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16095BA01CDD4D450065D483 /* MapKit.framework */; };
 		16095BA41CDD80E20065D483 /* availableDriverCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BA31CDD80E20065D483 /* availableDriverCell.swift */; };
 		16095BAE1CE2C5230065D483 /* SWRevealViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 16095BAD1CE2C5230065D483 /* SWRevealViewController.m */; };
+		16095BB31CE54C4D0065D483 /* secondaryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB21CE54C4D0065D483 /* secondaryVC.swift */; };
+		16095BB51CE587A70065D483 /* profileModeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB41CE587A70065D483 /* profileModeCell.swift */; };
+		16095BB71CE599ED0065D483 /* friendsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB61CE599ED0065D483 /* friendsCell.swift */; };
 		1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD191CDA901A00456B26 /* silentModeCell.swift */; };
 		1688FD211CDC3C0E00456B26 /* mapSearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */; };
 		1688FD241CDC452900456B26 /* mapSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD231CDC452900456B26 /* mapSearchTable.swift */; };
@@ -68,6 +71,9 @@
 		16095BA31CDD80E20065D483 /* availableDriverCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = availableDriverCell.swift; sourceTree = "<group>"; };
 		16095BAC1CE2C51C0065D483 /* SWRevealViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWRevealViewController.h; sourceTree = "<group>"; };
 		16095BAD1CE2C5230065D483 /* SWRevealViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWRevealViewController.m; sourceTree = "<group>"; };
+		16095BB21CE54C4D0065D483 /* secondaryVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = secondaryVC.swift; path = ../secondaryVC.swift; sourceTree = "<group>"; };
+		16095BB41CE587A70065D483 /* profileModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = profileModeCell.swift; sourceTree = "<group>"; };
+		16095BB61CE599ED0065D483 /* friendsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = friendsCell.swift; sourceTree = "<group>"; };
 		1688FD191CDA901A00456B26 /* silentModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = silentModeCell.swift; sourceTree = "<group>"; };
 		1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchVC.swift; sourceTree = "<group>"; };
 		1688FD231CDC452900456B26 /* mapSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchTable.swift; sourceTree = "<group>"; };
@@ -153,13 +159,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		16095BA21CDD80B00065D483 /* Main */ = {
+		16095BA21CDD80B00065D483 /* Main/Secondary */ = {
 			isa = PBXGroup;
 			children = (
 				169A56671CD99C9F00D97A82 /* mainVC.swift */,
+				16095BB21CE54C4D0065D483 /* secondaryVC.swift */,
 				16095BA31CDD80E20065D483 /* availableDriverCell.swift */,
+				16095BB61CE599ED0065D483 /* friendsCell.swift */,
 			);
-			name = Main;
+			name = Main/Secondary;
 			sourceTree = "<group>";
 		};
 		1688FD181CDA709500456B26 /* Map */ = {
@@ -206,7 +214,7 @@
 		169A56121CD9999200D97A82 /* FetchAppV2 */ = {
 			isa = PBXGroup;
 			children = (
-				16095BA21CDD80B00065D483 /* Main */,
+				16095BA21CDD80B00065D483 /* Main/Secondary */,
 				1688FD181CDA709500456B26 /* Map */,
 				169A56751CD9BAFA00D97A82 /* Login/Register */,
 				169A56691CD99E4000D97A82 /* Menu */,
@@ -276,6 +284,7 @@
 				16095BAC1CE2C51C0065D483 /* SWRevealViewController.h */,
 				16095BAD1CE2C5230065D483 /* SWRevealViewController.m */,
 				1688FD191CDA901A00456B26 /* silentModeCell.swift */,
+				16095BB41CE587A70065D483 /* profileModeCell.swift */,
 			);
 			name = Menu;
 			sourceTree = "<group>";
@@ -444,9 +453,12 @@
 				169A56681CD99C9F00D97A82 /* mainVC.swift in Sources */,
 				169A56791CD9BF3D00D97A82 /* locationSearchTable.swift in Sources */,
 				169A56141CD9999200D97A82 /* AppDelegate.swift in Sources */,
+				16095BB51CE587A70065D483 /* profileModeCell.swift in Sources */,
 				169A56701CD9A50E00D97A82 /* menuTableVC.swift in Sources */,
 				169A56771CD9BEB300D97A82 /* User.swift in Sources */,
 				1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */,
+				16095BB31CE54C4D0065D483 /* secondaryVC.swift in Sources */,
+				16095BB71CE599ED0065D483 /* friendsCell.swift in Sources */,
 				16095BA41CDD80E20065D483 /* availableDriverCell.swift in Sources */,
 				1688FD211CDC3C0E00456B26 /* mapSearchVC.swift in Sources */,
 				1688FD241CDC452900456B26 /* mapSearchTable.swift in Sources */,

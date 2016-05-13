@@ -24,12 +24,13 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     var geoCoder: CLGeocoder?
     var didMove:Bool = false
     var pickupDropOff: Bool?
-    var activeUser: User!
+    var didCancel: Bool = false
     var currentUser = PFUser.currentUser()
     var pickupAddress: String?
     var pickupCoordinate: CLLocationCoordinate2D?
     var dropoffAddress: String?
     var dropoffCoordinate: CLLocationCoordinate2D?
+    var distance: Double = 0
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapPin: UIImageView!
@@ -81,6 +82,10 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
         mapView.setCenterCoordinate(mapView.userLocation.coordinate, animated: true)
     }
     
+    @IBAction func cancelEditDidTouch(sender: AnyObject) {
+        self.didCancel = true
+        self.performSegueWithIdentifier("returnFromEditSegue", sender: self)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -122,23 +127,34 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
         if (segue.identifier == "returnFromEditSegue") {
             let destinationVC:SWRevealViewController = segue.destinationViewController as! SWRevealViewController
-            /* if pickupDropOff == false
-            *       editing pickUpAddress & pickupCoordinate
-            *  else if pickupDropOff == true
-            *       editing dropoffAddress & dropoffCoordinate
-            *  Pass unedited address & coordinate to next view controller for both cases
+            /* 1) Check if user hit cancel edit button (didCancel = true?)
+            *  1.a) If yes, pass all values to next  view controller without changing.
+            *  1.b) If no, continue with edit...
+            *       if pickupDropOff == false
+            *           editing pickUpAddress & pickupCoordinate
+            *       else if pickupDropOff == true
+            *           editing dropoffAddress & dropoffCoordinate
+            *       Pass unedited address & coordinate to next view controller for both cases
             */
-            if(self.pickupDropOff == true) {
-                destinationVC.dropoffAddress = self.chosenAddress
-                destinationVC.dropoffCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
+            if(self.didCancel == true) {
+                self.didCancel = false
                 destinationVC.pickupAddress = self.pickupAddress!
                 destinationVC.pickupCoordinate = self.pickupCoordinate!
-                
-            } else if (self.pickupDropOff == false) {
-                destinationVC.pickupAddress = self.chosenAddress
-                destinationVC.pickupCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
                 destinationVC.dropoffAddress = self.dropoffAddress!
                 destinationVC.dropoffCoordinate = self.dropoffCoordinate!
+            } else if (self.didCancel == false) {
+                if(self.pickupDropOff == true) {
+                    destinationVC.dropoffAddress = self.chosenAddress
+                    destinationVC.dropoffCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
+                    destinationVC.pickupAddress = self.pickupAddress!
+                    destinationVC.pickupCoordinate = self.pickupCoordinate!
+                    
+                } else if (self.pickupDropOff == false) {
+                    destinationVC.pickupAddress = self.chosenAddress
+                    destinationVC.pickupCoordinate = CLLocationCoordinate2DMake(self.chosenPlaceMark!.coordinate.latitude, self.chosenPlaceMark!.coordinate.longitude)
+                    destinationVC.dropoffAddress = self.dropoffAddress!
+                    destinationVC.dropoffCoordinate = self.dropoffCoordinate!
+                }
             }
             destinationVC.firstOpen = false
             destinationVC.returnFromEdit = true

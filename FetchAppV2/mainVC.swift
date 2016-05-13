@@ -24,7 +24,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var currentLocation = CLLocation()
     var geoCoder: CLGeocoder?
     var PickUpDropOff: Bool = false // pickUp = false, dropOff = true
-    var distance: Double?
+    var distance: Double = 0
     var requestCancel: Bool = false // request = false, cancel = true
     var updatedPickUp:Bool = false
     var updatedDropOff:Bool = false
@@ -40,7 +40,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var pickupCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
     var dropoffCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
     var chosenPlaceMark: MKPlacemark? = nil
-    
+    var status:String = ""
     /*
      * Outlets
      */
@@ -139,8 +139,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             routeDetails = response.routes.first!;
             let realDistance = (routeDetails!.distance / 1609.344)
             self.distance = Double(round(100*realDistance)/100)
-            self.distanceLabel.text = "Approximate distance: \(self.distance!) miles"
-            print("distance = \(self.distance!)")
+            self.distanceLabel.text = "Approximate distance: \(self.distance) miles"
+            print("distance = \(self.distance)")
         }
     }
     
@@ -187,6 +187,33 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Function: Indicates what happens when a user selects a cell
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         // do select for driver
+    }
+    
+    func revealController(revealController: SWRevealViewController!, willMoveToPosition position: FrontViewPosition) {
+        let tagId = 4207868622
+        
+        if revealController.frontViewPosition == FrontViewPosition.Right {
+            let lock = self.view.viewWithTag(tagId)
+            UIView.animateWithDuration(0.25, animations: {
+                lock?.alpha = 0
+                }, completion: {(finished: Bool) in
+                    lock?.removeFromSuperview()
+                }
+            )
+            lock?.removeFromSuperview()
+        } else if revealController.frontViewPosition == FrontViewPosition.Left {
+            let lock = UIView(frame: self.view.bounds)
+            lock.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+            lock.tag = tagId
+            lock.alpha = 0
+            lock.backgroundColor = UIColor.blackColor()
+            lock.addGestureRecognizer(UITapGestureRecognizer(target: self.revealViewController(), action: "revealToggle:"))
+            self.view.addSubview(lock)
+            UIView.animateWithDuration(0.75, animations: {
+                lock.alpha = 0.333
+                }
+            )
+        }
     }
     
     // These functions are no longer being used, originally used to update the database for search for a value in the database
@@ -289,12 +316,16 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBAction func requestRideDidTouch(sender: AnyObject) {
         // Check that the pickupAddress & dropoffAddress are specified
         // If not, display an alert
+        if(pickupAddress.text == "" && dropoffAddress.text == "") {
+            self.displayOkayAlert("Missing field(s)", message: "Please select a pick-up and drop-off adddress to continue.")
+            return
+        }
         if(pickupAddress.text == "") {
-            self.displayOkayAlert("Missing pick-up location", message: "Please select a pick-up adddress to continue.")
+            self.displayOkayAlert("Missing field(s)", message: "Please select a pick-up adddress to continue.")
             return
         }
         if(dropoffAddress.text == "") {
-            self.displayOkayAlert("Missing drop-off location", message: "Please select a drop-off address to continue.")
+            self.displayOkayAlert("Missing field(s)", message: "Please select a drop-off address to continue.")
             return
         }
         
@@ -318,7 +349,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     object!["dropoffCoordinateLAT"] = self.dropoffCoordinate.latitude
                     object!["dropoffCoordinateLONG"] = self.dropoffCoordinate.longitude
                     object!["driver"] = ""
-                    object!["status"] = "searching for driver"
+                    object!["status"] = "Searching for driver."
+                    self.status = object!["status"] as! String
+                    self.primaryStatusLabel.text = self.status
                     object!.saveInBackgroundWithBlock {
                         (success: Bool, error: NSError?) -> Void in
                         if (success) {
@@ -331,7 +364,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             }
         }
         
-        primaryStatusLabel.text = "Searching for a driver..."
+        primaryStatusLabel.text = self.status
         driverArrivedButton.hidden = true
         cancelRideButton.hidden = false
         requestRideButton.hidden = true
@@ -343,7 +376,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     }
     
     @IBAction func cancelRideDidTouch(sender: AnyObject) {
-        // Set the status of user to inactive in database
+        // Set the status of user to "Waiting for user." in database
         // 1) Authenticate user
         if currentUser != nil {
             // 2) Search for user in rider class
@@ -355,12 +388,14 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     // Error occured
                     print("Error: \(error!) \(error!.description)")
                 } else {
-                    // 3) Set status to inactive
-                    object!["status"] = "inactive"
+                    // 3) Set status to Waiting for user.
+                    object!["status"] = "Waiting for user."
+                    self.status = object!["status"] as! String
+                    self.primaryStatusLabel.text = self.status
                     object!.saveInBackgroundWithBlock {
                         (success: Bool, error: NSError?) -> Void in
                         if (success) {
-                            print("Status has been set to inactive")
+                            print("Status has been set to Waiting for user.")
                         } else {
                             print("Error: \(error!) \(error!.description)")
                         }
@@ -389,37 +424,12 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
      */
     override func viewDidLoad() {
         // Implement slide-out menu button
-        menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
-        
-        // Add refresh action to driverTableView
-        // Pull down to refresh
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(mainVC.refresh(_:)), forControlEvents: .ValueChanged)
-        driverTableView.addSubview(refreshControl)
-        
-        // Hide driverTableView and corresponding label at start
-        driverTableView.hidden = true
-        selectADriverLabel.hidden = true
-        
-        // Hide/Show buttons depending on primaryStatusLabel
-        if(primaryStatusLabel.text == "Waiting for driver.") {
-            driverArrivedButton.hidden = false
-            cancelRideButton.hidden = true
-            requestRideButton.hidden = true
-        } else if(primaryStatusLabel.text == "Waiting for user.") {
-            driverArrivedButton.hidden = true
-            cancelRideButton.hidden = true
-            requestRideButton.hidden = false
-        } else if(primaryStatusLabel.text == "Searching for driver..."){
-            driverArrivedButton.hidden = true
-            cancelRideButton.hidden = false
-            requestRideButton.hidden = true
-        } else {
-            driverArrivedButton.hidden = true
-            cancelRideButton.hidden = true
-            requestRideButton.hidden = false
+        if self.revealViewController() != nil {
+            menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
+            self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
+            self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
         }
-
+        
         // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
             // 1) Set pickup address & coordinate to current location
@@ -441,7 +451,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["dropoffCoordinateLAT"] = 0
                 request["dropoffCoordinateLONG"] = 0
                 request["driver"] = ""
-                request["status"] = "inactive"
+                request["status"] = "Waiting for user."
                 
                 // 2.3) Search the "rider" class in database for the user
                 var query = PFQuery(className: "rider")
@@ -483,7 +493,107 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             if(CLLocationCoordinate2DIsValid(self.pickupCoordinate) && CLLocationCoordinate2DIsValid(self.dropoffCoordinate)) {
                 self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
             }
+        } else {
+            // Set pickup and dropoff address to previous set locations
+            self.pickupAddress.text = self.pickupAddressVar
+            self.dropoffAddress.text = self.dropoffAddressVar
+            self.distanceLabel.text = "Approximate distance: \(String(format:"%f", self.distance))"
+            self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
+            // Check if user is currently using the application
+            // 1) Authenticate user
+            if currentUser != nil {
+                // 2) Search for user in rider class
+                let query = PFQuery(className: "rider")
+                query.whereKey("username", equalTo:currentUser!.username!)
+                query.getFirstObjectInBackgroundWithBlock {
+                    (object: PFObject?, error: NSError?) -> Void in
+                    if error != nil || object == nil {
+                        // Error occured
+                        print("Error: \(error!) \(error!.description)")
+                    } else {
+                        // 3) Set status to Waiting for user.
+                        self.status = object!["status"] as! String
+                        self.primaryStatusLabel.text = self.status
+                        
+                        // Hide/Show buttons depending on status
+                        if(self.status == "Waiting for user.") {
+                            self.driverArrivedButton.hidden = true
+                            self.cancelRideButton.hidden = true
+                            self.requestRideButton.hidden = false
+                        } else {
+                            self.driverTableView.hidden = false
+                            self.selectADriverLabel.hidden = false
+                            self.pickupAddress.text = object!["pickupAddress"] as? String
+                            self.pickupAddressVar = object!["pickupAddress"] as? String
+                            self.pickupCoordinateLAT = object!["pickupCoordinateLAT"] as! Double
+                            self.pickupCoordinateLONG = object!["pickupCoordinateLONG"] as! Double
+                            self.dropoffAddress.text = object!["dropoffAddress"] as? String
+                            self.dropoffAddressVar = object!["pickupAddress"] as? String
+                            self.pickupCoordinateLAT = object!["dropoffCoordinateLAT"] as! Double
+                            self.pickupCoordinateLAT = object!["dropoffCoordinateLONG"] as! Double
+                            self.pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT, self.pickupCoordinateLONG)
+                            self.dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT, self.dropoffCoordinateLONG)
+                            if(CLLocationCoordinate2DIsValid(self.pickupCoordinate) && CLLocationCoordinate2DIsValid(self.dropoffCoordinate)) {
+                                print("update distance")
+                                self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
+                            }
+                            
+                            if (self.status == "Searching for driver.") {
+                                print("searching")
+                                self.driverArrivedButton.hidden = true
+                                self.cancelRideButton.hidden = false
+                                self.requestRideButton.hidden = true
+                            } else if (self.status == "Waiting for driver.") {
+                                self.driverArrivedButton.hidden = false
+                                self.cancelRideButton.hidden = true
+                                self.requestRideButton.hidden = true
+                            }
+                        }
+                    }
+                }
+            }
         }
+        if(primaryStatusLabel.text == "Waiting for user.") {
+            self.driverArrivedButton.hidden = true
+            self.cancelRideButton.hidden = true
+            self.requestRideButton.hidden = false
+        }
+        
+        // Add refresh action to driverTableView
+        // Pull down to refresh
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(mainVC.refresh(_:)), forControlEvents: .ValueChanged)
+        driverTableView.addSubview(refreshControl)
+        
+        // Hide driverTableView and corresponding label at start
+        if(primaryStatusLabel.text == "Waiting for user.") {
+            driverTableView.hidden = true
+            selectADriverLabel.hidden = true
+        } else {
+            driverTableView.hidden = false
+            selectADriverLabel.hidden = false
+        }
+        
+        // Hide/Show buttons depending on primaryStatusLabel
+//        if(primaryStatusLabel.text == "Waiting for driver.") {
+//            driverArrivedButton.hidden = false
+//            cancelRideButton.hidden = true
+//            requestRideButton.hidden = true
+//        } else if(primaryStatusLabel.text == "Waiting for user.") {
+//            driverArrivedButton.hidden = true
+//            cancelRideButton.hidden = true
+//            requestRideButton.hidden = false
+//        } else if(primaryStatusLabel.text == "Searching for driver."){
+//            driverArrivedButton.hidden = true
+//            cancelRideButton.hidden = false
+//            requestRideButton.hidden = true
+//        } else {
+//            driverArrivedButton.hidden = true
+//            cancelRideButton.hidden = true
+//            requestRideButton.hidden = false
+//        }
+
+        
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
@@ -499,6 +609,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             targetController.dropoffAddress = self.dropoffAddressVar
             targetController.dropoffCoordinate = self.dropoffCoordinate
             
+            if(self.distance > 0) {
+                targetController.distance = self.distance
+            }
             // Attempt to set address in next controller
             if(PickUpDropOff == true) {
                 // User selected to edit drop-off so set placemark to current dropoff

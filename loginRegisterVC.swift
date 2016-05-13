@@ -112,6 +112,8 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                 user.email = embeddedEmailAddressTextField.text
                 user["firstName"] = embeddedFirstNameTextField.text
                 user["lastName"] = embeddedLastNameTextField.text
+                user["level"] = 1
+                user["experience"] = 0
                 user.signUpInBackgroundWithBlock {
                     (succeeded, error) -> Void in
                     // If account creation failed, display error
