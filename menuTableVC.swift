@@ -101,7 +101,7 @@ class menuTableVC: UITableViewController {
                         let firstName = currentUser["firstName"] as! String
                         let lastName = currentUser["lastName"] as! String
                         let level = currentUser["level"] as! String
-                        var experience = currentUser["experience"] as! String
+                        let experience = currentUser["experience"] as! String
                         var doubleExperience = Double(experience)
                         // Set precision of experience to 1 decimal places
                         doubleExperience = Double(round(10*(doubleExperience)!)/10)
@@ -122,7 +122,7 @@ class menuTableVC: UITableViewController {
                         // Set profileCell information
                         profileCell.fullName.text = "\(firstName) \(lastName)"
                         profileCell.level.text = "Level \(level)"
-                        profileCell.experience.text = "Experience: \(doubleExperience)/\(experienceRange)"
+                        profileCell.experience.text = "Experience: \(doubleExperience!)/\(experienceRange)"
                     }
                 })
             }
@@ -196,7 +196,6 @@ class menuTableVC: UITableViewController {
                 
             } else if (indexPath.row == 6) {
                 // log out
-                currentView = indexPath.row
                 // Check status of user in database "rider" class
                 // 1) Authenticate user
                 if currentUser != nil {

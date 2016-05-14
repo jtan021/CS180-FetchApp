@@ -622,7 +622,7 @@
 				);
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2;
+				PRODUCT_BUNDLE_IDENTIFIER = JT.CS180.FetchAppV2;
 				PRODUCT_MODULE_NAME = FetchAppV2;
 				PRODUCT_NAME = FetchAppV3;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/FetchAppV2/FetchAppV2-Bridging-Header.h";
@@ -643,7 +643,7 @@
 				);
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = JC.FetchAppV2;
+				PRODUCT_BUNDLE_IDENTIFIER = JT.CS180.FetchAppV2;
 				PRODUCT_MODULE_NAME = FetchAppV2;
 				PRODUCT_NAME = FetchAppV3;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/FetchAppV2/FetchAppV2-Bridging-Header.h";

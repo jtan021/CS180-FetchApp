@@ -41,6 +41,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var dropoffCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
     var chosenPlaceMark: MKPlacemark? = nil
     var status:String = ""
+    
     /*
      * Outlets
      */
@@ -189,32 +190,162 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // do select for driver
     }
     
-    func revealController(revealController: SWRevealViewController!, willMoveToPosition position: FrontViewPosition) {
-        let tagId = 4207868622
-        
-        if revealController.frontViewPosition == FrontViewPosition.Right {
-            let lock = self.view.viewWithTag(tagId)
-            UIView.animateWithDuration(0.25, animations: {
-                lock?.alpha = 0
-                }, completion: {(finished: Bool) in
-                    lock?.removeFromSuperview()
+    func checkForPendingFriends() -> Void {
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "friends")
+            userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || userObject == nil {
+                    // Error occured
+                    print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                } else {
+                    let pendingList:String = userObject!["pendingFrom"] as! String
+                    if(pendingList != "") {
+                        var pendingArray = [String]()
+                        pendingArray = pendingList.componentsSeparatedByString(",")
+                        for pendingFriend in pendingArray {
+                            if(pendingFriend != "") {
+                                let alert = UIAlertController(title: "New friend pending", message: "\(pendingFriend) requested to add you to their friend's list.", preferredStyle:  UIAlertControllerStyle.Alert)
+                                alert.addAction(UIAlertAction(title: "Accept", style: .Default, handler: { (action: UIAlertAction!) in
+                                    self.updateFriendsList(pendingFriend)
+                                }))
+                                alert.addAction(UIAlertAction(title: "Ignore", style: .Default, handler: { (action: UIAlertAction!) in
+                                    print("ignored")
+                                }))
+                                alert.addAction(UIAlertAction(title: "Decline", style: .Default, handler: { (action: UIAlertAction!) in
+                                    self.removePendingFriend(pendingFriend)
+                                }))
+                                self.presentViewController(alert, animated: true, completion: nil)
+                            }
+                        }
+                    }
                 }
-            )
-            lock?.removeFromSuperview()
-        } else if revealController.frontViewPosition == FrontViewPosition.Left {
-            let lock = UIView(frame: self.view.bounds)
-            lock.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-            lock.tag = tagId
-            lock.alpha = 0
-            lock.backgroundColor = UIColor.blackColor()
-            lock.addGestureRecognizer(UITapGestureRecognizer(target: self.revealViewController(), action: "revealToggle:"))
-            self.view.addSubview(lock)
-            UIView.animateWithDuration(0.75, animations: {
-                lock.alpha = 0.333
-                }
-            )
+            }
         }
     }
+    
+    func updateFriendsList(friendUser: String) -> Void {
+        // 1) Update user's friendList with new friend
+        let userQuery = PFQuery(className: "friends")
+        userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
+        userQuery.getFirstObjectInBackgroundWithBlock {
+            (userObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || userObject == nil {
+                // Error occured
+                print("Error13: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+            } else {
+                var friendList:String = userObject!["friendsList"] as! String
+                if(friendList == "") {
+                    friendList = "\(friendUser)"
+                } else {
+                    friendList = "\(friendList),\(friendUser)"
+                }
+                userObject!["friendsList"] = friendList
+                userObject!.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("userObject updated")
+                        self.displayOkayAlert("Friend list updated", message: "You and \(friendUser) are now friends.")
+                    } else {
+                        print("Error updating user's friend list: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        }
+        
+        // 2) Update friend's friend list with user
+        let friendQuery = PFQuery(className: "friends")
+        friendQuery.whereKey("username", equalTo: friendUser)
+        friendQuery.getFirstObjectInBackgroundWithBlock {
+            (friendObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || friendObject == nil {
+                // Error occured
+                print("Error14: Username: \(friendUser) -- \(error!) \(error!.description)")
+            } else {
+                var friendList:String = friendObject!["friendsList"] as! String
+                if(friendList == "") {
+                    friendList = "\(self.currentUser!.username!)"
+                } else {
+                    friendList = "\(friendList),\(self.currentUser!.username!)"
+                }
+                friendObject!["friendsList"] = friendList
+                friendObject!.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("friendObject updated")
+                    } else {
+                        print("Error updating friend's friendlist: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        }
+        
+        self.removePendingFriend(friendUser)
+    }
+    
+    func removePendingFriend(friendUser: String) -> Void {
+        // 1) Remove pending user from user's pending
+        let userQuery = PFQuery(className: "friends")
+        userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
+        userQuery.getFirstObjectInBackgroundWithBlock {
+            (userObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || userObject == nil {
+                // Error occured
+                print("Error13: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+            } else {
+                let pendingList:String = userObject!["pendingFrom"] as! String
+                let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString(friendUser, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(friendUser)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                
+                if(newPendingList2 == pendingList) {
+                    userObject!["pendingFrom"] = newPendingList1
+                } else {
+                    userObject!["pendingFrom"] = newPendingList2
+                }
+                
+                userObject!.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("userObject deleted pending friend \(friendUser)")
+                    } else {
+                        print("Error deleting user's prending friend: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        }
+        
+        // 2) Remove pending user from friend's pending
+        let friendQuery = PFQuery(className: "friends")
+        friendQuery.whereKey("username", equalTo: friendUser)
+        friendQuery.getFirstObjectInBackgroundWithBlock {
+            (friendObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || friendObject == nil {
+                // Error occured
+                print("Error14: Username: \(friendUser) -- \(error!) \(error!.description)")
+            } else {
+                let pendingList:String = friendObject!["pendingTo"] as! String
+                let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString((self.currentUser!.username!), withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(self.currentUser!.username!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                
+                if(newPendingList2 == pendingList) {
+                    friendObject!["pendingTo"] = newPendingList1
+                } else {
+                    friendObject!["pendingTo"] = newPendingList2
+                }
+                friendObject!.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("friendObject deleted pending user \(self.currentUser?.username!)")
+                    } else {
+                        print("Error deleting friend's pending friend: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        }
+    }
+    
+    
     
     // These functions are no longer being used, originally used to update the database for search for a value in the database
     // Not tested thoroughly, functions may not completely work
@@ -454,7 +585,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["status"] = "Waiting for user."
                 
                 // 2.3) Search the "rider" class in database for the user
-                var query = PFQuery(className: "rider")
+                let query = PFQuery(className: "rider")
                 query.whereKey("username", equalTo:currentUser!.username!)
                 query.getFirstObjectInBackgroundWithBlock {
                     (object: PFObject?, error: NSError?) -> Void in
@@ -573,26 +704,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             driverTableView.hidden = false
             selectADriverLabel.hidden = false
         }
-        
-        // Hide/Show buttons depending on primaryStatusLabel
-//        if(primaryStatusLabel.text == "Waiting for driver.") {
-//            driverArrivedButton.hidden = false
-//            cancelRideButton.hidden = true
-//            requestRideButton.hidden = true
-//        } else if(primaryStatusLabel.text == "Waiting for user.") {
-//            driverArrivedButton.hidden = true
-//            cancelRideButton.hidden = true
-//            requestRideButton.hidden = false
-//        } else if(primaryStatusLabel.text == "Searching for driver."){
-//            driverArrivedButton.hidden = true
-//            cancelRideButton.hidden = false
-//            requestRideButton.hidden = true
-//        } else {
-//            driverArrivedButton.hidden = true
-//            cancelRideButton.hidden = true
-//            requestRideButton.hidden = false
-//        }
-
         
     }
     

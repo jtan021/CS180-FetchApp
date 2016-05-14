@@ -14,7 +14,7 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
     /*
     * Constants
     */
-    
+    var characterSet:NSCharacterSet = NSCharacterSet(charactersInString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLKMNOPQRSTUVWXYZ0123456789")
     
     /*
     * Outlets
@@ -27,6 +27,7 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var embeddedLastNameTextField: UITextField!
     @IBOutlet weak var embeddedEmailAddressTextField: UITextField!
     @IBOutlet weak var embeddedConfirmPasswordTextField: UITextField!
+    @IBOutlet weak var embeddedPhoneNumberTextField: UITextField!
     
     /*
      * Custom functions
@@ -44,6 +45,22 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
     // Dismisses the keyboard if areas outside of editable text are tapped
     func DismissKeyboard() {
         view.endEditing(true)
+    }
+    
+    // textFieldShouldReturn()
+    // Add's done button to textfield
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func cancelNumberPad() {
+        embeddedPhoneNumberTextField.resignFirstResponder()
+        embeddedPhoneNumberTextField.text = ""
+    }
+    
+    func doneWithNumberPad() {
+        embeddedPhoneNumberTextField.resignFirstResponder()
     }
     
     /*
@@ -73,6 +90,8 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
         // First check that all fields are filled out.
         if (usernameTextField.text == "" || passwordTextField.text == "") {
             self.displayAlert("Missing field(s)", message: "Please enter your desired username & password to continue.")
+        } else if (usernameTextField.text!.rangeOfCharacterFromSet(characterSet.invertedSet) != nil) {
+            self.displayAlert("Invalid username", message: "Acceptable characters for a Fetch account username include letters a-z, A-Z, and numbers 0-9")
         } else {
             // Second check that the entered username is not taken
             let query = PFQuery(className: "_User")
@@ -98,10 +117,14 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
     
     @IBAction func embeddedRegisterDidTouch(sender: AnyObject) {
         // First check that all fields are filled out.
-        if (embeddedFirstNameTextField.text == "" || embeddedLastNameTextField.text == "" || embeddedConfirmPasswordTextField.text == "" || embeddedEmailAddressTextField.text == "") {
+        if (embeddedFirstNameTextField.text == "" || embeddedLastNameTextField.text == "" || embeddedConfirmPasswordTextField.text == "" || embeddedEmailAddressTextField.text == "" || embeddedPhoneNumberTextField.text == "") {
             self.displayAlert("Missing field(s)", message: "All fields must be filled out.")
         } else {
             // Second check that the two passwords entered match
+            if (embeddedPhoneNumberTextField.text!.characters.count != 10) {
+                print(embeddedPhoneNumberTextField.text!.characters.count)
+                self.displayAlert("Invalid phone number", message: "Please enter a valid 10 digit phone number including area code.")
+            }
             if (passwordTextField.text != embeddedConfirmPasswordTextField.text) {
                 self.displayAlert("Invalid password", message: "The confirmed password must be identical to the previously entered password.")
             } else {
@@ -112,8 +135,12 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                 user.email = embeddedEmailAddressTextField.text
                 user["firstName"] = embeddedFirstNameTextField.text
                 user["lastName"] = embeddedLastNameTextField.text
-                user["level"] = 1
-                user["experience"] = 0
+                user["level"] = "1"
+                user["experience"] = "0"
+                user["friends"] = ""
+                user["pending"] = ""
+                user["phoneNumber"] = embeddedPhoneNumberTextField.text
+                user["status"] = "green"
                 user.signUpInBackgroundWithBlock {
                     (succeeded, error) -> Void in
                     // If account creation failed, display error
@@ -123,9 +150,28 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                         }
                     } else {
                         // Else account has been successfully registered, hide registrationView
-                        print("Successful registration")
-                        self.viewToDim.hidden = true
-                        self.registrationView.hidden = true
+                        let newFriendObject = PFObject(className: "friends")
+                        newFriendObject["username"] = self.usernameTextField.text
+                        newFriendObject["friendsList"] = ""
+                        newFriendObject["pendingFrom"] = ""
+                        newFriendObject["pendingTo"] = ""
+                        let defaultACL = PFACL()
+                        defaultACL.publicWriteAccess = true
+                        defaultACL.publicReadAccess = true
+                        PFACL.setDefaultACL(defaultACL, withAccessForCurrentUser:true)
+                        newFriendObject.ACL = defaultACL
+                        newFriendObject.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("Successful registration")
+                                self.viewToDim.hidden = true
+                                self.registrationView.hidden = true
+                                self.displayAlert("\(self.usernameTextField.text!) successfully registered", message: "Welcome to Fetch.")
+                                self.performSegueWithIdentifier("successfulLoginSegue", sender: self)
+                            } else {
+                                print("Error1: \(error!) \(error!.description)")
+                            }
+                        }
                     }
                 }
             }
@@ -149,13 +195,33 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
         self.embeddedConfirmPasswordTextField.delegate = self
         self.embeddedFirstNameTextField.delegate = self
         self.embeddedLastNameTextField.delegate = self
+        self.embeddedPhoneNumberTextField.delegate = self
+        
+        // Set phoneNumber textfield keyboard to numberpad
+        self.embeddedPhoneNumberTextField.keyboardType = UIKeyboardType.NumberPad
+        
+        // Add done button to all regular keyboards
+        self.usernameTextField.returnKeyType = UIReturnKeyType.Done
+        self.passwordTextField.returnKeyType = UIReturnKeyType.Done
+        self.embeddedEmailAddressTextField.returnKeyType = UIReturnKeyType.Done
+        self.embeddedConfirmPasswordTextField.returnKeyType = UIReturnKeyType.Done
+        self.embeddedFirstNameTextField.returnKeyType = UIReturnKeyType.Done
+        self.embeddedLastNameTextField.returnKeyType = UIReturnKeyType.Done
+        self.embeddedPhoneNumberTextField.returnKeyType = UIReturnKeyType.Done
+        
+        // Add done button to number pad keyboard
+        let numberToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, 320, 50))
+        numberToolbar.barStyle = UIBarStyle.Default
+        numberToolbar.items = [UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Plain, target: self, action: #selector(loginRegisterVC.cancelNumberPad)), UIBarButtonItem(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil), UIBarButtonItem(title: "Done", style: .Done, target: self, action: #selector(loginRegisterVC.doneWithNumberPad))]
+        numberToolbar.sizeToFit()
+        embeddedPhoneNumberTextField.inputAccessoryView = numberToolbar
         
         // Hides registration view
         viewToDim.hidden = true
         registrationView.hidden = true
         
         // Adds gesture so keyboard is dismissed when areas outside of editable text are tapped
-        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "DismissKeyboard")
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(loginRegisterVC.DismissKeyboard))
         view.addGestureRecognizer(tap)
     }
     
