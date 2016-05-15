@@ -226,6 +226,22 @@ class menuTableVC: UITableViewController {
                                         (success: Bool, error: NSError?) -> Void in
                                         if (success) {
                                             print("Status set to Waiting for user.")
+                                            
+                                            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                                                if let currentUser = currentUser as? PFUser {
+                                                    currentUser["status"] = "green"
+                                                    currentUser.saveInBackgroundWithBlock {
+                                                        (success: Bool, error: NSError?) -> Void in
+                                                        if (success) {
+                                                            print("User status has been updated.")
+                                                            
+                                                        } else {
+                                                            print("Error: \(error!) \(error!.description)")
+                                                        }
+                                                    }
+                                                }
+                                            })
+                                            
                                         } else {
                                             print("Error: \(error!) \(error!.description)")
                                         }

@@ -13,6 +13,7 @@
 		16095BB31CE54C4D0065D483 /* secondaryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB21CE54C4D0065D483 /* secondaryVC.swift */; };
 		16095BB51CE587A70065D483 /* profileModeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB41CE587A70065D483 /* profileModeCell.swift */; };
 		16095BB71CE599ED0065D483 /* friendsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16095BB61CE599ED0065D483 /* friendsCell.swift */; };
+		16095BB91CE7E2280065D483 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16095BB81CE7E2270065D483 /* MessageUI.framework */; };
 		1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD191CDA901A00456B26 /* silentModeCell.swift */; };
 		1688FD211CDC3C0E00456B26 /* mapSearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */; };
 		1688FD241CDC452900456B26 /* mapSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1688FD231CDC452900456B26 /* mapSearchTable.swift */; };
@@ -74,6 +75,7 @@
 		16095BB21CE54C4D0065D483 /* secondaryVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = secondaryVC.swift; path = ../secondaryVC.swift; sourceTree = "<group>"; };
 		16095BB41CE587A70065D483 /* profileModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = profileModeCell.swift; sourceTree = "<group>"; };
 		16095BB61CE599ED0065D483 /* friendsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = friendsCell.swift; sourceTree = "<group>"; };
+		16095BB81CE7E2270065D483 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		1688FD191CDA901A00456B26 /* silentModeCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = silentModeCell.swift; sourceTree = "<group>"; };
 		1688FD201CDC3C0E00456B26 /* mapSearchVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchVC.swift; sourceTree = "<group>"; };
 		1688FD231CDC452900456B26 /* mapSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mapSearchTable.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16095BB91CE7E2280065D483 /* MessageUI.framework in Frameworks */,
 				169A56561CD99B0600D97A82 /* CoreLocation.framework in Frameworks */,
 				16095BA11CDD4D450065D483 /* MapKit.framework in Frameworks */,
 				169A56621CD99B2900D97A82 /* libsqlite3.tbd in Frameworks */,
@@ -191,7 +194,6 @@
 		169A56071CD9999200D97A82 = {
 			isa = PBXGroup;
 			children = (
-				16095BA01CDD4D450065D483 /* MapKit.framework */,
 				169A56121CD9999200D97A82 /* FetchAppV2 */,
 				169A56271CD9999200D97A82 /* FetchAppV2Tests */,
 				169A56321CD9999200D97A82 /* FetchAppV2UITests */,
@@ -249,6 +251,8 @@
 		169A56411CD999B500D97A82 /* Framework */ = {
 			isa = PBXGroup;
 			children = (
+				16095BB81CE7E2270065D483 /* MessageUI.framework */,
+				16095BA01CDD4D450065D483 /* MapKit.framework */,
 				169A56421CD99AB300D97A82 /* parse-library-1.12.0 */,
 				169A56611CD99B2900D97A82 /* libsqlite3.tbd */,
 				169A565F1CD99B2300D97A82 /* libz.tbd */,

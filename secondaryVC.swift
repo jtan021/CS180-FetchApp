@@ -14,7 +14,8 @@ class secondaryVC: UIViewController {
     var friendNameArray = [String]()
     var friendUsernameArray = [String]()
     var friendLevelArray = [String]()
-    var friendStatusArray = [UIImage]()
+    var friendStatusArray = [String]()
+    var friendStatusImageArray = [UIImage]()
     var userFriend:String?
     var inputTextField: UITextField?
     var pendingList:String = ""
@@ -23,7 +24,18 @@ class secondaryVC: UIViewController {
     @IBOutlet weak var menuButton: UIBarButtonItem!
     @IBOutlet weak var friendTableView: UITableView!
     @IBOutlet weak var newFriendButton: UIButton!
-
+    @IBOutlet weak var activeRequestView: UIView!
+    @IBOutlet weak var requestFullName: UILabel!
+    @IBOutlet weak var requestUsername: UILabel!
+    @IBOutlet weak var requestPickupAddress: UITextView!
+    @IBOutlet weak var requestDropoffAddress: UITextView!
+    @IBOutlet weak var requestDistance: UILabel!
+    @IBOutlet weak var friendListViewToDim: UIView!
+    @IBOutlet weak var inactiveRequestView: UIView!
+    @IBOutlet weak var inactiveRequestImage: UIImageView!
+    @IBOutlet weak var inactiveRequestFullName: UILabel!
+    @IBOutlet weak var inactiveRequestUsername: UILabel!
+    @IBOutlet weak var inactiveRequestLevel: UILabel!
     
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
@@ -358,7 +370,7 @@ class secondaryVC: UIViewController {
         let friendCell = tableView.dequeueReusableCellWithIdentifier("friendCell", forIndexPath: indexPath) as! friendsCell
         friendCell.name.text = friendNameArray[indexPath.row]
         friendCell.level.text = friendLevelArray[indexPath.row]
-        friendCell.status.image = friendStatusArray[indexPath.row]
+        friendCell.status.image = friendStatusImageArray[indexPath.row]
         return friendCell
     }
     
@@ -368,6 +380,35 @@ class secondaryVC: UIViewController {
     // Function: Indicates what happens when a user selects a cell
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         print("selected cell")
+        if(friendStatusArray[indexPath.row] == "red") {
+            self.requestFullName.text = self.friendNameArray[indexPath.row]
+            self.requestUsername.text = self.friendUsernameArray[indexPath.row]
+            print(self.friendUsernameArray[indexPath.row])
+            let userQuery = PFQuery(className: "rider")
+            userQuery.whereKey("username", equalTo: self.friendUsernameArray[indexPath.row])
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || userObject == nil {
+                    // Error occured
+                    print("Error15: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                } else {
+                    let pickupAddress = userObject!["pickupAddress"] as! String
+                    let dropoffAddress = userObject!["dropoffAddress"] as! String
+                    let distance = userObject!["distance"] as! String
+                    self.requestPickupAddress.text = pickupAddress
+                    self.requestDropoffAddress.text = dropoffAddress
+                    self.requestDistance.text = "Approximate distance: \(distance) miles"
+                    self.friendListViewToDim.hidden = false
+                    self.activeRequestView.hidden = false
+                }
+            }
+        } else {
+            self.inactiveRequestFullName.text = self.friendNameArray[indexPath.row]
+            self.inactiveRequestUsername.text = self.friendUsernameArray[indexPath.row]
+            self.inactiveRequestLevel.text = self.friendLevelArray[indexPath.row]
+            self.friendListViewToDim.hidden = false
+            self.inactiveRequestView.hidden = false
+        }
         // do select for driver
     }
     
@@ -438,6 +479,7 @@ class secondaryVC: UIViewController {
     
     func updateFriendsTable() -> Void {
         self.friendStatusArray.removeAll()
+        self.friendStatusImageArray.removeAll()
         self.friendNameArray.removeAll()
         self.friendLevelArray.removeAll()
         self.friendUsernameArray.removeAll()
@@ -467,14 +509,15 @@ class secondaryVC: UIViewController {
                                 let level = object!["level"] as! String
                                 let status = object!["status"] as! String
                                 if(status == "red") {
-                                    self.friendStatusArray.append(UIImage(named: "redStatus")!)
+                                    self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
                                 } else if(status == "green") {
-                                    self.friendStatusArray.append(UIImage(named: "greenStatus")!)
+                                    self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
                                 } else {
-                                    self.friendStatusArray.append(UIImage(named: "greyStatus")!)
+                                    self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
                                 }
                                 self.friendNameArray.append(fullName)
                                 self.friendLevelArray.append("Level \(level)")
+                                self.friendStatusArray.append(status)
                                 self.friendTableView.reloadData()
                                 print(self.friendNameArray[0])
                             }
@@ -519,9 +562,26 @@ class secondaryVC: UIViewController {
         self.checkForPendingRequests()
     }
     
+    @IBAction func acceptRequestDidTouch(sender: AnyObject) {
+        print("accepted")
+    }
+    
+    @IBAction func cancelRequestDidTouch(sender: AnyObject) {
+        self.friendListViewToDim.hidden = true
+        self.activeRequestView.hidden = true
+    }
+    
+    @IBAction func cancelInactiveRequestDidTouch(sender: AnyObject) {
+        self.friendListViewToDim.hidden = true
+        self.inactiveRequestView.hidden = true
+    }
+    
     override func viewDidLoad() {
         // Start by hiding newFriendButton
         self.newFriendButton.hidden = true
+        self.activeRequestView.hidden = true
+        self.friendListViewToDim.hidden = true
+        self.inactiveRequestView.hidden = true
         
         // Add menu button action
         if self.revealViewController() != nil {
@@ -538,6 +598,7 @@ class secondaryVC: UIViewController {
         
         // Populate friend's table
         self.friendStatusArray.removeAll()
+        self.friendStatusImageArray.removeAll()
         self.friendNameArray.removeAll()
         self.friendLevelArray.removeAll()
         self.friendUsernameArray.removeAll()

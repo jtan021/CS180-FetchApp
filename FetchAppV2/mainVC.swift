@@ -11,12 +11,14 @@ import Parse
 import MapKit
 import CoreLocation
 import QuartzCore
+import MessageUI
 
 protocol HandleMapSearch {
     func newLocationZoomIn(placemark:MKPlacemark)
 }
 
-class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, UISearchBarDelegate, UISearchControllerDelegate, UIGestureRecognizerDelegate {
+class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, UISearchBarDelegate, UISearchControllerDelegate, UIGestureRecognizerDelegate, MFMessageComposeViewControllerDelegate {
+
     /*
      * Constants
      */
@@ -41,7 +43,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var dropoffCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
     var chosenPlaceMark: MKPlacemark? = nil
     var status:String = ""
-    
+    var pendingList: String = ""
+    var pendingListArray = [String]()
+    var friendPhoneNumberArray = [String]()
     /*
      * Outlets
      */
@@ -345,67 +349,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         }
     }
     
-    
-    
-    // These functions are no longer being used, originally used to update the database for search for a value in the database
-    // Not tested thoroughly, functions may not completely work
-    /*
-    func searchParseDBforString(className:String, dataName: String) -> String {
-        var foundValue: String = ""
-        if currentUser != nil {
-            // 2) Check if user has used the application before and a user object exists in the database already.
-            let query = PFQuery(className: className)
-            query.whereKey("username", equalTo:currentUser!.username!)
-            query.getFirstObjectInBackgroundWithBlock {
-                (object: PFObject?, error: NSError?) -> Void in
-                if error != nil || object == nil {
-                    // Error occured
-                    print("Error: \(error!) \(error!.description)")
-                } else {
-                    // The find succeeded.
-                    foundValue = object![dataName] as! String
-                    print("Found value = \(foundValue)")
-                }
-            }
-        }
-        
-        if(foundValue != "") {
-            return foundValue
-        } else {
-            return "Error: Username not authorized."
-        }
-    }
-    
-    func updateInfoFromDB() -> Void {
-        if currentUser != nil {
-            // 2) Check if user has used the application before and a user object exists in the database already.
-            let query = PFQuery(className: "rider")
-            query.whereKey("username", equalTo:currentUser!.username!)
-            query.getFirstObjectInBackgroundWithBlock {
-                (object: PFObject?, error: NSError?) -> Void in
-                if error != nil || object == nil {
-                    // Error occured
-                    print("Error: \(error!) \(error!.description)")
-                } else {
-                    self.pickupAddressVar = (object!["pickupAddress"] as! String)
-                    self.pickupCoordinateLAT = (object!["pickupCoordinateLAT"] as! Double)
-                    self.pickupCoordinateLONG = (object!["pickupCoordinateLONG"] as! Double)
-                    self.dropoffAddressVar = (object!["dropoffAddress"] as! String)
-                    self.dropoffCoordinateLAT = (object!["dropoffCoordinateLAT"] as! Double)
-                    self.dropoffCoordinateLONG = (object!["dropoffCoordinateLONG"] as! Double)
-                    self.pickupAddress.text = self.pickupAddressVar
-                    self.dropoffAddress.text = self.dropoffAddressVar
-                    self.pickupCoordinate = CLLocationCoordinate2DMake(self.pickupCoordinateLAT, self.pickupCoordinateLONG)
-                    self.dropoffCoordinate = CLLocationCoordinate2DMake(self.dropoffCoordinateLAT, self.dropoffCoordinateLONG)
-                    if(CLLocationCoordinate2DIsValid(self.pickupCoordinate) && CLLocationCoordinate2DIsValid(self.dropoffCoordinate)) {
-                        self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
-                    }
-                }
-            }
-        }
-    }
-    */
-    
     // refresh
     // Input: UIRefreshControl
     // Output: None
@@ -481,12 +424,29 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     object!["dropoffCoordinateLONG"] = self.dropoffCoordinate.longitude
                     object!["driver"] = ""
                     object!["status"] = "Searching for driver."
+                    object!["distance"] = "\(self.distance)"
                     self.status = object!["status"] as! String
                     self.primaryStatusLabel.text = self.status
                     object!.saveInBackgroundWithBlock {
                         (success: Bool, error: NSError?) -> Void in
                         if (success) {
                             print("Object has been saved")
+                            
+                            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                                if let currentUser = currentUser as? PFUser {
+                                    currentUser["status"] = "red"
+                                    currentUser.saveInBackgroundWithBlock {
+                                        (success: Bool, error: NSError?) -> Void in
+                                        if (success) {
+                                            print("User status has been updated.")
+                                            
+                                        } else {
+                                            print("Error: \(error!) \(error!.description)")
+                                        }
+                                    }
+                                }
+                            })
+
                         } else {
                             print("Error: \(error!) \(error!.description)")
                         }
@@ -503,8 +463,57 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         selectADriverLabel.hidden = false
         requestCancel = true
         self.displayOkayAlert("Ride request sent", message: "Searching for a friendly driver.")
-        // Do request stuff
+        
+        /*  Simulator cannot sendTexts so currently nulled
+        *   self.sendTextToFriends()
+        */
     }
+    
+    func sendTextToFriends() -> Void {
+        self.friendPhoneNumberArray.removeAll()
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "friends")
+            userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || userObject == nil {
+                    // Error occured
+                    print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                } else {
+                    self.pendingList = userObject!["friendsList"] as! String
+                    self.pendingListArray = self.pendingList.componentsSeparatedByString(",")
+                    for friendUser in self.pendingListArray {
+                        let friendQuery = PFQuery(className: "_User")
+                        friendQuery.whereKey("username", equalTo: friendUser)
+                        friendQuery.getFirstObjectInBackgroundWithBlock {
+                            (userObject: PFObject?, error: NSError?) -> Void in
+                            if error != nil || userObject == nil {
+                                // Error occured
+                                print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                            } else {
+                                let phoneNumber = userObject!["phoneNumber"] as! String
+                                print("message to be sent to \(phoneNumber)")
+                                if (MFMessageComposeViewController.canSendText()) {
+                                    let controller = MFMessageComposeViewController()
+                                    controller.body = "\(self.currentUser!.username!) needs a ride from \(self.pickupAddress.text) to \(self.dropoffAddress.text). Approximate distance is \(self.distanceLabel.text). Open FetchApp to give them a ride!"
+                                    controller.recipients = [phoneNumber]
+                                    controller.messageComposeDelegate = self
+                                    self.presentViewController(controller, animated: true, completion: nil)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+    }
+    
+    func messageComposeViewController(controller: MFMessageComposeViewController!, didFinishWithResult result: MessageComposeResult) {
+        //... handle sms screen actions
+        self.dismissViewControllerAnimated(true, completion: nil)
+    }
+
     
     @IBAction func cancelRideDidTouch(sender: AnyObject) {
         // Set the status of user to "Waiting for user." in database
@@ -527,6 +536,20 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                         (success: Bool, error: NSError?) -> Void in
                         if (success) {
                             print("Status has been set to Waiting for user.")
+                            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                                if let currentUser = currentUser as? PFUser {
+                                    currentUser["status"] = "green"
+                                    currentUser.saveInBackgroundWithBlock {
+                                        (success: Bool, error: NSError?) -> Void in
+                                        if (success) {
+                                            print("User status has been updated.")
+                                            
+                                        } else {
+                                            print("Error: \(error!) \(error!.description)")
+                                        }
+                                    }
+                                }
+                            })
                         } else {
                             print("Error: \(error!) \(error!.description)")
                         }
@@ -576,12 +599,13 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 let request = PFObject(className: "rider")
                 request["username"] = currentUser!.username!
                 request["pickupAddress"] = ""
-                request["pickupCoordinateLAT"] = 0
-                request["pickupCoordinateLONG"] = 0
+                request["pickupCoordinateLAT"] = "0"
+                request["pickupCoordinateLONG"] = "0"
                 request["dropoffAddress"] = ""
-                request["dropoffCoordinateLAT"] = 0
-                request["dropoffCoordinateLONG"] = 0
+                request["dropoffCoordinateLAT"] = "0"
+                request["dropoffCoordinateLONG"] = "0"
                 request["driver"] = ""
+                request["distance"] = "0"
                 request["status"] = "Waiting for user."
                 
                 // 2.3) Search the "rider" class in database for the user
