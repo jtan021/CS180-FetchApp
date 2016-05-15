@@ -8,8 +8,10 @@
 
 import UIKit
 import Parse
+import MapKit
+import CoreLocation
 
-class secondaryVC: UIViewController {
+class secondaryVC: UIViewController, CLLocationManagerDelegate {
     var currentUser = PFUser.currentUser()
     var friendNameArray = [String]()
     var friendUsernameArray = [String]()
@@ -20,6 +22,9 @@ class secondaryVC: UIViewController {
     var inputTextField: UITextField?
     var pendingList:String = ""
     var pendingArray = [String]()
+    var userLocationLAT:Double = 0
+    var userLocationLONG:Double = 0
+    var locationManager = CLLocationManager()
     
     @IBOutlet weak var menuButton: UIBarButtonItem!
     @IBOutlet weak var friendTableView: UITableView!
@@ -117,7 +122,7 @@ class secondaryVC: UIViewController {
         }
         alertController.addAction(addFriend)
         //Create and add the Cancel action
-        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .Cancel) { action -> Void in
+        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .Default) { action -> Void in
             print("Canceled")
         }
         alertController.addAction(cancelAction)
@@ -349,6 +354,7 @@ class secondaryVC: UIViewController {
     // Output: None
     // Function: Function for refreshing the tableview
     func refresh(refreshControl: UIRefreshControl) {
+        self.updateFriendsTable()
         self.friendTableView.reloadData()
         //self.sendOutPendingRequests()
         refreshControl.endRefreshing()
@@ -552,6 +558,30 @@ class secondaryVC: UIViewController {
         }
     }
     
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation])
+    {
+        // Get user's current location in latitude and longitude
+        let location = locations.last! as CLLocation
+        self.userLocationLAT = location.coordinate.latitude
+        self.userLocationLONG = location.coordinate.longitude
+        // Save user's latitude and longitude to ParseDB
+        PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+            if let currentUser = currentUser as? PFUser {
+                currentUser["currentLAT"] = "\(self.userLocationLAT)"
+                currentUser["currentLONG"] = "\(self.userLocationLONG)"
+                currentUser.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("User currentLAT & currentLONG has been updated.")
+                    } else {
+                        print("Error: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        })
+        self.locationManager.stopUpdatingLocation()
+    }
+    
     @IBAction func addFriendsDidTouch(sender: AnyObject) {
         self.displayFindFriendAlert("Enter Fetch Account username", message: "*Fetch accounts are case-sensitive.")
     }
@@ -561,12 +591,168 @@ class secondaryVC: UIViewController {
         self.updateFriendsTable()
         self.checkForPendingRequests()
     }
-    
-    @IBAction func acceptRequestDidTouch(sender: AnyObject) {
+   
+    @IBAction func acceptFriendRequestDidTouch(sender: AnyObject) {
         print("accepted")
+        let friendUser:String = self.requestUsername.text!
+        let userQuery = PFQuery(className: "rider")
+        userQuery.whereKey("username", equalTo: friendUser)
+        userQuery.getFirstObjectInBackgroundWithBlock {
+            (friendObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || friendObject == nil {
+                // Error occured
+                print("Error16: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+            } else {
+                var pendingDriver = friendObject!["pendingDriver"] as! String
+                if pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil{
+                    print("user exists in their pending already")
+                    self.displayOkayAlert("Error", message: "You already accepted \(friendUser)'s request.")
+                } else {
+                    if(pendingDriver == "") {
+                        pendingDriver = "\(self.currentUser!.username!)"
+                    } else {
+                        pendingDriver = "\(pendingDriver),\(self.currentUser!.username!)"
+                    }
+                    friendObject!["pendingDriver"] = pendingDriver
+                    friendObject!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("Friend's pending drivers has been updated.")
+                            self.displayOkayAlert("Request sent", message: "You accepted \(friendUser)'s request. Please wait for their confirmation.")
+                            self.friendListViewToDim.hidden = true
+                            self.activeRequestView.hidden = true
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+        // Add user to friend's pendingList
     }
     
-    @IBAction func cancelRequestDidTouch(sender: AnyObject) {
+    @IBAction func cancelFriendRequestDidTouch(sender: AnyObject) {
+        let friendUser:String = self.requestUsername.text!
+        let userQuery = PFQuery(className: "rider")
+        userQuery.whereKey("username", equalTo: friendUser)
+        userQuery.getFirstObjectInBackgroundWithBlock {
+            (friendObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || friendObject == nil {
+                // Error occured
+                print("Error17: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+            } else {
+                let pendingDriver = friendObject!["pendingDriver"] as! String
+                if ((pendingDriver == "") || (pendingDriver.rangeOfString("\(self.currentUser!.username!)") == nil)) {
+                    print("user does not exist in the friend's pending already")
+                    self.displayOkayAlert("Error", message: "You never accepted \(friendUser)'s request.")
+                } else {
+                    let newPendingDriver1:String = pendingDriver.stringByReplacingOccurrencesOfString((self.currentUser!.username!), withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                    let newPendingDriver2:String = pendingDriver.stringByReplacingOccurrencesOfString(",\(self.currentUser!.username!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                    
+                    if(newPendingDriver2 == pendingDriver) {
+                        friendObject!["pendingDriver"] = newPendingDriver1
+                    } else {
+                        friendObject!["pendingDriver"] = newPendingDriver2
+                    }
+                    friendObject!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("Friend's pending drivers has been updated.")
+                            self.locationManager.delegate = self
+                            self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
+                            self.locationManager.requestAlwaysAuthorization()
+                            self.locationManager.startUpdatingLocation()
+                            self.displayOkayAlert("Request cancelled", message: "You are no longer pending for \(friendUser)'s request.")
+                            self.friendListViewToDim.hidden = true
+                            self.activeRequestView.hidden = true
+                        } else {
+                            print("Error: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+//    @IBAction func acceptRequestDidTouch(sender: AnyObject) {
+//        print("accepted")
+//        let friendUser:String = self.requestUsername.text!
+//        let userQuery = PFQuery(className: "rider")
+//        userQuery.whereKey("username", equalTo: friendUser)
+//        userQuery.getFirstObjectInBackgroundWithBlock {
+//            (friendObject: PFObject?, error: NSError?) -> Void in
+//            if error != nil || friendObject == nil {
+//                // Error occured
+//                print("Error16: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+//            } else {
+//                var pendingDriver = friendObject!["pendingDriver"] as! String
+//                if pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil{
+//                    print("user exists in their pending already")
+//                    self.displayOkayAlert("Error", message: "You already accepted \(friendUser)'s request.")
+//                } else {
+//                    if(pendingDriver == "") {
+//                        pendingDriver = "\(self.currentUser!.username!)"
+//                    } else {
+//                        pendingDriver = "\(pendingDriver),\(self.currentUser!.username!)"
+//                    }
+//                    friendObject!["pendingDriver"] = pendingDriver
+//                    friendObject!.saveInBackgroundWithBlock {
+//                        (success: Bool, error: NSError?) -> Void in
+//                        if (success) {
+//                            print("Friend's pending drivers has been updated.")
+//                            self.displayOkayAlert("Request sent", message: "You accepted \(friendUser)'s request. Please wait for their confirmation.")
+//                            self.friendListViewToDim.hidden = true
+//                            self.activeRequestView.hidden = true
+//                        } else {
+//                            print("Error: \(error!) \(error!.description)")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        // Add user to friend's pendingList
+//    }
+//    
+//    @IBAction func cancelRequestDidTouch(sender: AnyObject) {
+//        let friendUser:String = self.requestUsername.text!
+//        let userQuery = PFQuery(className: "rider")
+//        userQuery.whereKey("username", equalTo: friendUser)
+//        userQuery.getFirstObjectInBackgroundWithBlock {
+//            (friendObject: PFObject?, error: NSError?) -> Void in
+//            if error != nil || friendObject == nil {
+//                // Error occured
+//                print("Error17: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+//            } else {
+//                var pendingDriver = friendObject!["pendingDriver"] as! String
+//                if ((pendingDriver == "") || (pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil)) {
+//                    print("user does not exist in the friend's pending already")
+//                    self.displayOkayAlert("Error", message: "You never accepted \(friendUser)'s request.")
+//                } else {
+//                    let newPendingDriver1:String = pendingDriver.stringByReplacingOccurrencesOfString((self.currentUser!.username!), withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+//                    let newPendingDriver2:String = pendingDriver.stringByReplacingOccurrencesOfString(",\(self.currentUser!.username!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+//                    
+//                    if(newPendingDriver2 == pendingDriver) {
+//                        friendObject!["pendingDriver"] = newPendingDriver1
+//                    } else {
+//                        friendObject!["pendingDriver"] = newPendingDriver2
+//                    }
+//                    friendObject!.saveInBackgroundWithBlock {
+//                        (success: Bool, error: NSError?) -> Void in
+//                        if (success) {
+//                            print("Friend's pending drivers has been updated.")
+//                            self.displayOkayAlert("Request cancelled", message: "You are no longer pending for \(friendUser)'s request.")
+//                            self.friendListViewToDim.hidden = true
+//                            self.activeRequestView.hidden = true
+//                        } else {
+//                            print("Error: \(error!) \(error!.description)")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+    
+    @IBAction func activeRequestCloseDidTouch(sender: AnyObject) {
         self.friendListViewToDim.hidden = true
         self.activeRequestView.hidden = true
     }
@@ -608,42 +794,3 @@ class secondaryVC: UIViewController {
         self.checkForPendingRequests()
     }
 }
-// 2 } up
-//            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
-//                if let currentUser = currentUser as? PFUser {
-//                    // Get information from database
-//                    let allFriendsUsernames = currentUser["friends"] as! String
-//                    self.friendUsernameArray = allFriendsUsernames.componentsSeparatedByString(",")
-//                    for username in self.friendUsernameArray {
-//                        // 2) Search for user object in "rider" class of database
-//                        let query = PFQuery(className: "_User")
-//                        query.whereKey("username", equalTo: username)
-//                        query.getFirstObjectInBackgroundWithBlock {
-//                            (object: PFObject?, error: NSError?) -> Void in
-//                            if error != nil || object == nil {
-//                                // Error occured
-//                                print("Error00: Username: \(username) -- \(error!) \(error!.description)")
-//                            } else {
-//                                let firstName = object!["firstName"] as! String
-//                                let lastName = object!["lastName"] as! String
-//                                let fullName = "\(firstName) \(lastName)"
-//                                let level = object!["level"] as! String
-//                                let status = object!["status"] as! String
-//                                if(status == "red") {
-//                                    self.friendStatusArray.append(UIImage(named: "redStatus")!)
-//                                } else if(status == "green") {
-//                                    self.friendStatusArray.append(UIImage(named: "greenStatus")!)
-//                                } else {
-//                                    self.friendStatusArray.append(UIImage(named: "greyStatus")!)
-//                                }
-//                                self.friendNameArray.append(fullName)
-//                                self.friendLevelArray.append("Level \(level)")
-//                                self.friendTableView.reloadData()
-//                                print(self.friendNameArray[0])
-//                            }
-//                        }
-//                        
-//                    }
-//                }
-//            })
-

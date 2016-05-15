@@ -37,6 +37,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var pickupCoordinateLONG: Double = 0
     var dropoffCoordinateLAT: Double = 0
     var dropoffCoordinateLONG: Double = 0
+    var userLocationLAT:Double = 0
+    var userLocationLONG:Double = 0
     var pickupAddressVar: String?
     var dropoffAddressVar: String?
     var pickupCoordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(0, 0)
@@ -46,6 +48,15 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var pendingList: String = ""
     var pendingListArray = [String]()
     var friendPhoneNumberArray = [String]()
+    
+    var pendingFriendFullNameArray = [String]()
+    var pendingFriendUsernameArray = [String]()
+    var pendingFriendLevelArray = [String]()
+    var pendingFriendDistanceArray = [String]()
+    var pendingDriversArray = [String]()
+    var pendingDistance:Double = 0
+    var friendLocationLAT:Double = 0
+    var friendLocationLONG:Double = 0
     /*
      * Outlets
      */
@@ -119,6 +130,27 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         let location: CLLocation = locations.first!
         let coordinate: CLLocationCoordinate2D = location.coordinate
         pickupCoordinate = CLLocationCoordinate2DMake(coordinate.latitude, coordinate.longitude)
+        
+        // Get user's current location in latitude and longitude
+        let cuurrlocation = locations.last! as CLLocation
+        self.userLocationLAT = cuurrlocation.coordinate.latitude
+        self.userLocationLONG = cuurrlocation.coordinate.longitude
+        // Save user's latitude and longitude to ParseDB
+        PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+            if let currentUser = currentUser as? PFUser {
+                currentUser["currentLAT"] = "\(self.userLocationLAT)"
+                currentUser["currentLONG"] = "\(self.userLocationLONG)"
+                currentUser.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("User currentLAT & currentLONG has been updated.")
+                    } else {
+                        print("Error: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        })
+        
         geoCode(location)
     }
     
@@ -149,6 +181,27 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         }
     }
     
+    func updatePendingDistance(coordinate1:CLLocationCoordinate2D, coordinate2: CLLocationCoordinate2D) -> Void {
+        var routeDetails: MKRoute?
+        let directionsRequest: MKDirectionsRequest = MKDirectionsRequest()
+        let placemark1: MKPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2DMake(coordinate1.latitude, coordinate1.longitude), addressDictionary: nil)
+        let placemark2: MKPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2DMake(coordinate2.latitude, coordinate2.longitude), addressDictionary: nil)
+        directionsRequest.source = MKMapItem(placemark: placemark1)
+        directionsRequest.destination = MKMapItem(placemark: placemark2)
+        directionsRequest.transportType = .Automobile
+        let directions: MKDirections = MKDirections(request: directionsRequest)
+        directions.calculateDirectionsWithCompletionHandler {
+            response, error in
+            guard let response = response else {
+                print("Error %@", error!.description)
+                return
+            }
+            routeDetails = response.routes.first!;
+            let realDistance = (routeDetails!.distance / 1609.344)
+            self.pendingDistance = Double(round(100*realDistance)/100)
+        }
+    }
+    
     // Name: geoCode
     // Inputs: None
     // Outputs: None
@@ -174,7 +227,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Outputs: None
     // Function: Sets the numberOfRowsInSection of table
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+        return self.pendingFriendFullNameArray.count
     }
     
     // Name: tableView
@@ -183,6 +236,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Function: Updates the tableView cell with information
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("driverCell", forIndexPath: indexPath) as! availableDriverCell
+        cell.driverName.text = self.pendingFriendFullNameArray[indexPath.row]
+        cell.driverLevel.text = self.pendingFriendLevelArray[indexPath.row]
+        cell.driverDistance.text = self.pendingFriendDistanceArray[indexPath.row]
         return cell
     }
     
@@ -192,6 +248,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Function: Indicates what happens when a user selects a cell
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         // do select for driver
+        print("selected pending user")
     }
     
     func checkForPendingFriends() -> Void {
@@ -354,6 +411,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Output: None
     // Function: Function for refreshing the tableview
     func refresh(refreshControl: UIRefreshControl) {
+        self.populatePendingDriversTable()
+        self.driverTableView.reloadData()
         refreshControl.endRefreshing()
     }
     
@@ -423,6 +482,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     object!["dropoffCoordinateLAT"] = self.dropoffCoordinate.latitude
                     object!["dropoffCoordinateLONG"] = self.dropoffCoordinate.longitude
                     object!["driver"] = ""
+                    object!["pendingDriver"] = ""
                     object!["status"] = "Searching for driver."
                     object!["distance"] = "\(self.distance)"
                     self.status = object!["status"] as! String
@@ -439,7 +499,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                         (success: Bool, error: NSError?) -> Void in
                                         if (success) {
                                             print("User status has been updated.")
-                                            
+                                            self.locationManager.startUpdatingLocation()
+                                            self.populatePendingDriversTable()
                                         } else {
                                             print("Error: \(error!) \(error!.description)")
                                         }
@@ -512,6 +573,61 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     func messageComposeViewController(controller: MFMessageComposeViewController!, didFinishWithResult result: MessageComposeResult) {
         //... handle sms screen actions
         self.dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func populatePendingDriversTable() -> Void {
+        self.pendingFriendFullNameArray.removeAll()
+        self.pendingFriendDistanceArray.removeAll()
+        self.pendingFriendLevelArray.removeAll()
+        self.pendingFriendUsernameArray.removeAll()
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "rider")
+            userQuery.whereKey("username", equalTo: currentUser!.username!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || userObject == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    let allPendingDrivers = userObject!["pendingDriver"] as! String
+                    self.pendingDriversArray = allPendingDrivers.componentsSeparatedByString(",")
+                    for driverUser in self.pendingDriversArray {
+                        let query = PFQuery(className: "_User")
+                        query.whereKey("username", equalTo: driverUser)
+                        query.getFirstObjectInBackgroundWithBlock {
+                            (object: PFObject?, error: NSError?) -> Void in
+                            if error != nil || object == nil {
+                                // Error occured
+                                print("Error000: Username: \(driverUser) -- \(error!) \(error!.description)")
+                            } else {
+                                // Success
+                                let firstName = object!["firstName"] as! String
+                                let lastName = object!["lastName"] as! String
+                                let fullName = "\(firstName) \(lastName)"
+                                let level = object!["level"] as! String
+                                let friendLAT:String = object!["currentLAT"] as! String
+                                let friendLONG:String = object!["currentLONG"] as! String
+                                self.friendLocationLAT = Double(friendLAT)!
+                                self.friendLocationLONG = Double(friendLONG)!
+                                let userCoordinate = CLLocationCoordinate2DMake(self.userLocationLAT, self.userLocationLONG)
+                                let friendCoordinate = CLLocationCoordinate2DMake(self.friendLocationLAT, self.friendLocationLONG)
+                                if(CLLocationCoordinate2DIsValid(userCoordinate) && CLLocationCoordinate2DIsValid(friendCoordinate)) {
+                                    print("both coordinates valid")
+                                    self.updatePendingDistance(userCoordinate, coordinate2: friendCoordinate)
+                                } else {
+                                    print("something went wrong")
+                                }
+                                self.pendingFriendFullNameArray.append(fullName)
+                                self.pendingFriendDistanceArray.append("\(self.pendingDistance) miles")
+                                self.pendingFriendLevelArray.append("Level \(level)")
+                                self.pendingFriendUsernameArray.append(driverUser)
+                                self.driverTableView.reloadData()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     
@@ -605,6 +721,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["dropoffCoordinateLAT"] = "0"
                 request["dropoffCoordinateLONG"] = "0"
                 request["driver"] = ""
+                request["pendingDriver"] = ""
                 request["distance"] = "0"
                 request["status"] = "Waiting for user."
                 

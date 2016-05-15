@@ -141,6 +141,8 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                 user["pending"] = ""
                 user["phoneNumber"] = embeddedPhoneNumberTextField.text
                 user["status"] = "green"
+                user["currentLAT"] = "0"
+                user["currentLONG"] = "0"
                 user.signUpInBackgroundWithBlock {
                     (succeeded, error) -> Void in
                     // If account creation failed, display error
