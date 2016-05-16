@@ -35,6 +35,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var requestPickupAddress: UITextView!
     @IBOutlet weak var requestDropoffAddress: UITextView!
     @IBOutlet weak var requestDistance: UILabel!
+    @IBOutlet weak var requestUserPic: UIImageView!
     @IBOutlet weak var friendListViewToDim: UIView!
     @IBOutlet weak var inactiveRequestView: UIView!
     @IBOutlet weak var inactiveRequestImage: UIImageView!
@@ -45,8 +46,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
-    // Function: Displays a UIAlertController with "Yes" "No" buttons to ask the user a "Yes/No" Question.
-    // Currently is not being used.
+    // Function: Displays a UIAlertController with input text capabilities which searches the database for the inputted username and handles.
     func displayFindFriendAlert(title: String, message: String) {
         let alertController: UIAlertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
         let addFriend: UIAlertAction = UIAlertAction(title: "Add", style: .Default) { action -> Void in
@@ -592,6 +592,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
         self.checkForPendingRequests()
     }
    
+    // If user taps to accept friend's ride request
     @IBAction func acceptFriendRequestDidTouch(sender: AnyObject) {
         print("accepted")
         let friendUser:String = self.requestUsername.text!
@@ -628,9 +629,9 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
                 }
             }
         }
-        // Add user to friend's pendingList
     }
     
+    // If user taps to cancel accepting friend's ride request
     @IBAction func cancelFriendRequestDidTouch(sender: AnyObject) {
         let friendUser:String = self.requestUsername.text!
         let userQuery = PFQuery(className: "rider")
