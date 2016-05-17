@@ -403,7 +403,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
                     let distance = userObject!["distance"] as! String
                     self.requestPickupAddress.text = pickupAddress
                     self.requestDropoffAddress.text = dropoffAddress
-                    self.requestDistance.text = "Approximate distance: \(distance) miles"
+                    self.requestDistance.text = "Approximate ride distance: \(distance) miles"
                     self.friendListViewToDim.hidden = false
                     self.activeRequestView.hidden = false
                 }

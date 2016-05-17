@@ -775,7 +775,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                         
                         self.status = "Waiting for driver."
                         self.primaryStatusLabel.text = self.status
-                        self.letUsKnowLabel.text = "Let us know when \(self.selectedDriver) arrives so we can start counting miles."
+                        self.letUsKnowLabel.text = "Let us know when \(self.selectedDriver) arrives so that we can start counting miles."
                         self.letUsKnowLabel.hidden = false
                         self.driverArrived2Button.setTitle("\(self.selectedDriver) has arrived.", forState: .Normal)
                         self.driverArrived2Button.hidden = false
@@ -965,7 +965,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 self.cancelRideButton.hidden = false
                                 self.requestRideButton.hidden = true
                             } else if (self.status == "Waiting for driver.") {
-                                self.letUsKnowLabel.text = "Let us know when \(self.selectedDriver) arrives so we can start counting miles."
+                                self.letUsKnowLabel.text = "Let us know when \(self.selectedDriver) arrives so that we can start counting miles."
                                 self.letUsKnowLabel.hidden = false
                                 self.driverArrived2Button.setTitle("\(self.selectedDriver) has arrived.", forState: .Normal)
                                 self.driverTableView.hidden = true
