@@ -57,7 +57,10 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var friendLocationLAT:Double = 0
     var friendLocationLONG:Double = 0
     var selectedDriver:String = ""
-    
+    var riderUser: String = ""
+    var riderPickupAddress: String = ""
+    var riderDropoffAddress: String = ""
+    //var isADriver: Bool = false
     /*
      * Outlets
      */
@@ -80,7 +83,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var driverViewLevel: UILabel!
     @IBOutlet weak var letUsKnowLabel: UILabel!
     @IBOutlet weak var driverArrived2Button: UIButton!
-    
+    @IBOutlet weak var taskDriverLabel: UILabel!
+    @IBOutlet weak var taskDriverInfoLabel: UILabel!
+    @IBOutlet weak var taskPickupAddress: UILabel!
+    @IBOutlet weak var taskDropoffAddress: UILabel!
+    @IBOutlet weak var taskView: UIView!
 
     /*
      * Custom functions
@@ -108,6 +115,14 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     func displayOkayAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle:  UIAlertControllerStyle.Alert)
         alert.addAction(UIAlertAction(title: "Okay", style: UIAlertActionStyle.Default, handler: nil))
+        self.presentViewController(alert, animated: true, completion: nil)
+    }
+    
+    func displayRiderAlert() {
+        let alert = UIAlertController(title: "\(self.riderUser) accepted your driver request.", message: "Please proceed to \(riderPickupAddress) to pick up \(self.riderUser).", preferredStyle:  UIAlertControllerStyle.Alert)
+        alert.addAction(UIAlertAction(title: "Okay", style: .Default, handler: { (action: UIAlertAction!) in
+            self.taskView.hidden = false
+        }))
         self.presentViewController(alert, animated: true, completion: nil)
     }
     
@@ -153,6 +168,55 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         
         // geoCode location
         geoCode(location)
+    }
+    
+    func checkIfDriving() -> Void {
+        let riderQuery = PFQuery(className: "rider")
+        riderQuery.whereKey("driver", equalTo: (self.currentUser!.username!))
+        if(self.firstOpen == true) {
+            riderQuery.getFirstObjectInBackgroundWithBlock {
+                (riderObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || riderObject == nil {
+                    // Error occured or user is not a driver
+                    print("Error14 - checkIfDriving: \(error!) \(error!.description)")
+                    self.taskDriverLabel.text = "No driving task"
+                    self.taskDriverInfoLabel.text = "You currently are not driving anyone. Check your friend's list to see if anyone needs a ride."
+                    self.taskPickupAddress.text = "N/A"
+                    self.taskDropoffAddress.text = "N/A"
+                } else {
+                    // User is a driver
+                    self.riderUser = riderObject!["username"] as! String
+                    self.riderPickupAddress = riderObject!["pickupAddress"] as! String
+                    self.riderDropoffAddress = riderObject!["dropoffAddress"] as! String
+                    self.taskDriverLabel.text = "You are \(self.riderUser)'s Driver"
+                    self.taskDriverInfoLabel.text = "Please proceed to the pick-up address and \(self.riderUser) will notify us when you have finished this task."
+                    self.taskPickupAddress.text = "\(self.riderPickupAddress)"
+                    self.taskDropoffAddress.text = "\(self.riderDropoffAddress)"
+                    self.displayRiderAlert()
+                }
+            }
+        } else {
+            riderQuery.getFirstObjectInBackgroundWithBlock {
+                (riderObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || riderObject == nil {
+                    // Error occured or user is not a driver
+                    print("Error14 - checkIfDriving: \(error!) \(error!.description)")
+                    self.taskDriverLabel.text = "No driving task"
+                    self.taskDriverInfoLabel.text = "You currently are not driving anyone. Check your friend's list to see if anyone needs a ride."
+                    self.taskPickupAddress.text = "N/A"
+                    self.taskDropoffAddress.text = "N/A"
+                } else {
+                    // User is a driver
+                    self.riderUser = riderObject!["username"] as! String
+                    self.riderPickupAddress = riderObject!["pickupAddress"] as! String
+                    self.riderDropoffAddress = riderObject!["dropoffAddress"] as! String
+                    self.taskDriverLabel.text = "You are \(self.riderUser)'s Driver"
+                    self.taskDriverInfoLabel.text = "Please proceed to the pick-up address and \(self.riderUser) will notify us when you have finished this task."
+                    self.taskPickupAddress.text = "\(self.riderPickupAddress)"
+                    self.taskDropoffAddress.text = "\(self.riderDropoffAddress)"
+                }
+            }
+        }
     }
     
     // updateDistance
@@ -446,7 +510,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 (userObject: PFObject?, error: NSError?) -> Void in
                 if error != nil || userObject == nil {
                     // Error occured
-                    print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                    print("Error12 - sendTextToFriends: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
                 } else {
                     self.pendingList = userObject!["friendsList"] as! String
                     self.pendingListArray = self.pendingList.componentsSeparatedByString(",")
@@ -457,7 +521,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                             (userObject: PFObject?, error: NSError?) -> Void in
                             if error != nil || userObject == nil {
                                 // Error occured
-                                print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                                print("Error13 - sendTextToFriends: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
                             } else {
                                 let phoneNumber = userObject!["phoneNumber"] as! String
                                 print("message to be sent to \(phoneNumber)")
@@ -604,6 +668,17 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             return
         }
         
+        // Check if the user is currently a driver.)
+        if(self.taskPickupAddress.text != "N/A") {
+            let alert = UIAlertController(title: "Error", message: "You cannot place a ride request with an active task.", preferredStyle:  UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Okay", style: .Default, handler: { (action: UIAlertAction!) in
+                self.taskView.hidden = false
+                print("got in")
+            }))
+            self.presentViewController(alert, animated: true, completion: nil)
+            return
+        }
+        
         // Save current info to database
         // 1) Authenticate user
         if currentUser != nil {
@@ -733,10 +808,16 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     
     @IBAction func driverArrivedDidTouch(sender: AnyObject) {
         print("driver arrived")
+        self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
+        self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
     }
     
     @IBAction func driverArrived2DidTouch(sender: AnyObject) {
-        print("driver arrived")
+        print("driver arrived2")
+        self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
+        self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
+        self.driverArrived2Button.backgroundColor = UIColor(red: 227/255, green: 67/255, blue: 69/255, alpha: 1)
+        self.driverArrived2Button.setTitle("I have arrived at my destination.", forState: .Normal)
     }
     
     @IBAction func acceptDriverDidTouch(sender: AnyObject) {
@@ -829,22 +910,60 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.viewToDim.hidden = true
     }
     
+    @IBAction func taskPickupAddressDidTouch(sender: AnyObject) {
+        print("touched taskpickup")
+        if(self.taskPickupAddress.text == "N/A") {
+            print("invalid dropoff, not a driver")
+            return
+        }
+        let origURL: String = "http://maps.apple.com/?q=\(self.taskPickupAddress.text!)"
+        let convertedURL : NSString = origURL.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+        let searchURL : NSURL = NSURL(string: convertedURL as String)!
+        UIApplication.sharedApplication().openURL(searchURL)
+    }
+    
+    @IBAction func taskDropoffDidTouch(sender: AnyObject) {
+        print("touched taskdropoff")
+        if(self.taskDropoffAddress.text == "N/A") {
+            print("invalid dropoff, not a driver")
+            return
+        }
+        
+        let origURL: String = "http://maps.apple.com/?q=\(self.taskDropoffAddress.text!)"
+        let convertedURL : NSString = origURL.stringByAddingPercentEscapesUsingEncoding(NSUTF8StringEncoding)!
+        let searchURL : NSURL = NSURL(string: convertedURL as String)!
+        UIApplication.sharedApplication().openURL(searchURL)
+    }
+    
+    @IBAction func taskViewDidTouch(sender: AnyObject) {
+        if(self.taskView.hidden == true) {
+           self.taskView.hidden = false
+        } else {
+            self.taskView.hidden = true
+        }
+    }
+    
     /*
      * Overrided Functions
      */
     override func viewDidLoad() {
         // Hide views
+        self.taskView.hidden = true
         self.driverView.hidden = true
         self.viewToDim.hidden = true
         self.letUsKnowLabel.hidden = true
         self.driverArrived2Button.hidden = true
-        
+        self.driverArrived2Button.backgroundColor = UIColor(red: 77/255, green: 166/255, blue: 17/255, alpha: 1)
+
         // Implement slide-out menu button
         if self.revealViewController() != nil {
             menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
             self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
             self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
         }
+        
+        // Check if user is a driver
+        self.checkIfDriving()
         
         // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
