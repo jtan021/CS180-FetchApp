@@ -11,13 +11,23 @@ import Parse
 import MapKit
 import CoreLocation
 
-class secondaryVC: UIViewController, CLLocationManagerDelegate {
+struct rankItem {
+    var fullName: String
+    var username: String
+    var level: String
+    var experience: String
+}
+
+class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource {
     var currentUser = PFUser.currentUser()
     var friendNameArray = [String]()
     var friendUsernameArray = [String]()
     var friendLevelArray = [String]()
     var friendStatusArray = [String]()
     var friendStatusImageArray = [UIImage]()
+    var rankNameArray = [String]()
+    var rankUsernameArray = [String]()
+    var rankLevelArray = [String]()
     var userFriend:String?
     var inputTextField: UITextField?
     var pendingList:String = ""
@@ -25,8 +35,11 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     var userLocationLAT:Double = 0
     var userLocationLONG:Double = 0
     var locationManager = CLLocationManager()
+    var rankArray = [rankItem]()
+    var viewSelect:Bool = false // False = friendListView, True = rankingView
     
     @IBOutlet weak var menuButton: UIBarButtonItem!
+    @IBOutlet weak var friendListView: UIView!
     @IBOutlet weak var friendTableView: UITableView!
     @IBOutlet weak var newFriendButton: UIButton!
     @IBOutlet weak var activeRequestView: UIView!
@@ -42,6 +55,15 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var inactiveRequestFullName: UILabel!
     @IBOutlet weak var inactiveRequestUsername: UILabel!
     @IBOutlet weak var inactiveRequestLevel: UILabel!
+    @IBOutlet weak var rankingTableView: UITableView!
+    @IBOutlet weak var rankViewToDim: UIView!
+    @IBOutlet weak var rankViewRank: UILabel!
+    @IBOutlet weak var rankViewFullName: UILabel!
+    @IBOutlet weak var rankViewUsername: UILabel!
+    @IBOutlet weak var rankViewLevel: UILabel!
+    @IBOutlet weak var rankingView: UIView!
+    @IBOutlet weak var rankingSelectedUserView: UIView!
+    @IBOutlet weak var rankingViewExperience: UILabel!
     
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
@@ -355,7 +377,9 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     // Function: Function for refreshing the tableview
     func refresh(refreshControl: UIRefreshControl) {
         self.updateFriendsTable()
+        self.updateRankingTable()
         self.friendTableView.reloadData()
+        self.rankingTableView.reloadData()
         //self.sendOutPendingRequests()
         refreshControl.endRefreshing()
     }
@@ -365,7 +389,12 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     // Outputs: None
     // Function: Sets the numberOfRowsInSection of table
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return friendNameArray.count
+        if(tableView == self.friendTableView) {
+            return friendNameArray.count
+        } else {
+            print(rankArray.count)
+            return rankArray.count
+        }
     }
     
     // Name: tableView
@@ -373,11 +402,19 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     // Outputs: None
     // Function: Updates the tableView cell with information
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let friendCell = tableView.dequeueReusableCellWithIdentifier("friendCell", forIndexPath: indexPath) as! friendsCell
-        friendCell.name.text = friendNameArray[indexPath.row]
-        friendCell.level.text = friendLevelArray[indexPath.row]
-        friendCell.status.image = friendStatusImageArray[indexPath.row]
-        return friendCell
+        if(tableView == self.friendTableView) {
+            let friendCell = tableView.dequeueReusableCellWithIdentifier("friendCell", forIndexPath: indexPath) as! friendsCell
+            friendCell.name.text = friendNameArray[indexPath.row]
+            friendCell.level.text = friendLevelArray[indexPath.row]
+            friendCell.status.image = friendStatusImageArray[indexPath.row]
+            return friendCell
+        } else {
+            let rankCell = tableView.dequeueReusableCellWithIdentifier("rankingCell", forIndexPath: indexPath) as! rankingsCell
+            rankCell.fullName.text = self.rankArray[indexPath.row].fullName
+            rankCell.level.text = "Level \(self.rankArray[indexPath.row].level)"
+            rankCell.rank.text = "\(indexPath.row + 1)"
+            return rankCell
+        }
     }
     
     // Name: tableView
@@ -386,100 +423,116 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
     // Function: Indicates what happens when a user selects a cell
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         print("selected cell")
-        if(friendStatusArray[indexPath.row] == "red") {
-            self.requestFullName.text = self.friendNameArray[indexPath.row]
-            self.requestUsername.text = self.friendUsernameArray[indexPath.row]
-            print(self.friendUsernameArray[indexPath.row])
-            let userQuery = PFQuery(className: "rider")
-            userQuery.whereKey("username", equalTo: self.friendUsernameArray[indexPath.row])
-            userQuery.getFirstObjectInBackgroundWithBlock {
-                (userObject: PFObject?, error: NSError?) -> Void in
-                if error != nil || userObject == nil {
-                    // Error occured
-                    print("Error15: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-                } else {
-                    let pickupAddress = userObject!["pickupAddress"] as! String
-                    let dropoffAddress = userObject!["dropoffAddress"] as! String
-                    let distance = userObject!["distance"] as! String
-                    self.requestPickupAddress.text = pickupAddress
-                    self.requestDropoffAddress.text = dropoffAddress
-                    self.requestDistance.text = "Approximate ride distance: \(distance) miles"
-                    self.friendListViewToDim.hidden = false
-                    self.activeRequestView.hidden = false
+        if(tableView == self.friendTableView) {
+            if(friendStatusArray[indexPath.row] == "red") {
+                self.requestFullName.text = self.friendNameArray[indexPath.row]
+                self.requestUsername.text = self.friendUsernameArray[indexPath.row]
+                print(self.friendUsernameArray[indexPath.row])
+                let userQuery = PFQuery(className: "rider")
+                userQuery.whereKey("username", equalTo: self.friendUsernameArray[indexPath.row])
+                userQuery.getFirstObjectInBackgroundWithBlock {
+                    (userObject: PFObject?, error: NSError?) -> Void in
+                    if error != nil || userObject == nil {
+                        // Error occured
+                        print("Error15: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                    } else {
+                        let pickupAddress = userObject!["pickupAddress"] as! String
+                        let dropoffAddress = userObject!["dropoffAddress"] as! String
+                        let distance = userObject!["distance"] as! String
+                        self.requestPickupAddress.text = pickupAddress
+                        self.requestDropoffAddress.text = dropoffAddress
+                        self.requestDistance.text = "Approximate ride distance: \(distance) miles"
+                        self.friendListViewToDim.hidden = false
+                        self.activeRequestView.hidden = false
+                    }
                 }
+            } else {
+                self.inactiveRequestFullName.text = self.friendNameArray[indexPath.row]
+                self.inactiveRequestUsername.text = self.friendUsernameArray[indexPath.row]
+                self.inactiveRequestLevel.text = self.friendLevelArray[indexPath.row]
+                self.friendListViewToDim.hidden = false
+                self.inactiveRequestView.hidden = false
             }
         } else {
-            self.inactiveRequestFullName.text = self.friendNameArray[indexPath.row]
-            self.inactiveRequestUsername.text = self.friendUsernameArray[indexPath.row]
-            self.inactiveRequestLevel.text = self.friendLevelArray[indexPath.row]
-            self.friendListViewToDim.hidden = false
-            self.inactiveRequestView.hidden = false
+            self.rankViewFullName.text = self.rankArray[indexPath.row].fullName
+            self.rankViewLevel.text = "Level \(self.rankArray[indexPath.row].level)"
+            self.rankViewUsername.text = self.rankArray[indexPath.row].username
+            self.rankViewRank.text = "Rank \(indexPath.row + 1)"
+            var experience = Double("\(self.rankArray[indexPath.row].experience)")
+            var realExperience = Double(round(10*(experience!)/10))
+            self.rankingViewExperience.text = "Total experience: \(realExperience)"
+            self.rankViewToDim.hidden = false
+            self.rankingSelectedUserView.hidden = false
         }
-        // do select for driver
     }
     
     func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        return true
+        if(tableView == self.friendTableView) {
+            return true
+        }
+        return false
     }
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        if (editingStyle == UITableViewCellEditingStyle.Delete) {
-            // handle delete (by removing the data from your array and updating the tableview)
-            let selectedUsername = friendUsernameArray[indexPath.row]
-            let alert = UIAlertController(title: "Delete friend", message: "Are you sure you want to remove \(selectedUsername) from your friend's list?", preferredStyle:  UIAlertControllerStyle.Alert)
-            alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
-                self.friendNameArray.removeAtIndex(indexPath.row)
-                self.friendUsernameArray.removeAtIndex(indexPath.row)
-                self.friendLevelArray.removeAtIndex(indexPath.row)
-                self.friendStatusArray.removeAtIndex(indexPath.row)
-                self.friendTableView.reloadData()
-                if self.currentUser?.username! != nil {
-                    let query = PFQuery(className: "friends")
-                    query.whereKey("username", equalTo: (self.currentUser?.username!)!)
-                    query.getFirstObjectInBackgroundWithBlock {
-                        (object: PFObject?, error: NSError?) -> Void in
-                        if error != nil || object == nil {
-                            // Error occured
-                            print("Error11: \(error!) \(error!.description)")
-                        } else {
-                            let friendList = (object!["friendsList"]) as! String
-                            let pendingList = (object!["pendingTo"]) as! String
-                            // Search the friendList for selectedUsername and ',selectedUsername'
-                            // If ',selectedUsername' was not found then no need to remove the comma
-                            // If ',selectedUsername' was found, remove the comma and the selectedUsername
-                            // Save newFriendList to object
-                            // Do same for pending list
-                            let newFriendList1:String = friendList.stringByReplacingOccurrencesOfString(selectedUsername, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-                            let newFriendList2:String = friendList.stringByReplacingOccurrencesOfString(",\(selectedUsername)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-                            let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString(selectedUsername, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-                            let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(selectedUsername)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-                            
-                            if(newFriendList2 == friendList) {
-                                object!["friendsList"] = newFriendList1
+        if(tableView == self.friendTableView) {
+            if (editingStyle == UITableViewCellEditingStyle.Delete) {
+                // handle delete (by removing the data from your array and updating the tableview)
+                let selectedUsername = friendUsernameArray[indexPath.row]
+                let alert = UIAlertController(title: "Delete friend", message: "Are you sure you want to remove \(selectedUsername) from your friend's list?", preferredStyle:  UIAlertControllerStyle.Alert)
+                alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
+                    self.friendNameArray.removeAtIndex(indexPath.row)
+                    self.friendUsernameArray.removeAtIndex(indexPath.row)
+                    self.friendLevelArray.removeAtIndex(indexPath.row)
+                    self.friendStatusArray.removeAtIndex(indexPath.row)
+                    self.friendTableView.reloadData()
+                    if self.currentUser?.username! != nil {
+                        let query = PFQuery(className: "friends")
+                        query.whereKey("username", equalTo: (self.currentUser?.username!)!)
+                        query.getFirstObjectInBackgroundWithBlock {
+                            (object: PFObject?, error: NSError?) -> Void in
+                            if error != nil || object == nil {
+                                // Error occured
+                                print("Error11: \(error!) \(error!.description)")
                             } else {
-                                object!["friendsList"] = newFriendList2
-                            }
-                            
-                            if(newPendingList2 == pendingList) {
-                                object!["pendingTo"] = newPendingList1
-                            } else {
-                                object!["pendingTo"] = newPendingList2
-                            }
-                            
-                            object!.saveInBackgroundWithBlock {
-                                (success: Bool, error: NSError?) -> Void in
-                                if (success) {
-                                    print("\(selectedUsername) has been removed.")
+                                let friendList = (object!["friendsList"]) as! String
+                                let pendingList = (object!["pendingTo"]) as! String
+                                // Search the friendList for selectedUsername and ',selectedUsername'
+                                // If ',selectedUsername' was not found then no need to remove the comma
+                                // If ',selectedUsername' was found, remove the comma and the selectedUsername
+                                // Save newFriendList to object
+                                // Do same for pending list
+                                let newFriendList1:String = friendList.stringByReplacingOccurrencesOfString(selectedUsername, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                                let newFriendList2:String = friendList.stringByReplacingOccurrencesOfString(",\(selectedUsername)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                                let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString(selectedUsername, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                                let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(selectedUsername)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                                
+                                if(newFriendList2 == friendList) {
+                                    object!["friendsList"] = newFriendList1
                                 } else {
-                                    print("Error: \(error!) \(error!.description)")
+                                    object!["friendsList"] = newFriendList2
+                                }
+                                
+                                if(newPendingList2 == pendingList) {
+                                    object!["pendingTo"] = newPendingList1
+                                } else {
+                                    object!["pendingTo"] = newPendingList2
+                                }
+                                
+                                object!.saveInBackgroundWithBlock {
+                                    (success: Bool, error: NSError?) -> Void in
+                                    if (success) {
+                                        print("\(selectedUsername) has been removed.")
+                                    } else {
+                                        print("Error: \(error!) \(error!.description)")
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }))
-            alert.addAction(UIAlertAction(title: "No", style: UIAlertActionStyle.Default, handler: nil))
-            self.presentViewController(alert, animated: true, completion: nil)
+                }))
+                alert.addAction(UIAlertAction(title: "No", style: UIAlertActionStyle.Default, handler: nil))
+                self.presentViewController(alert, animated: true, completion: nil)
+            }
         }
     }
     
@@ -526,6 +579,62 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
                                 self.friendStatusArray.append(status)
                                 self.friendTableView.reloadData()
                                 print(self.friendNameArray[0])
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func updateRankingTable() -> Void {
+        self.rankNameArray.removeAll()
+        self.rankLevelArray.removeAll()
+        self.rankUsernameArray.removeAll()
+        self.rankArray.removeAll()
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "friends")
+            userQuery.whereKey("username", equalTo: currentUser!.username!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error != nil || userObject == nil {
+                    // Error occured
+                    print("Error: \(error!) \(error!.description)")
+                } else {
+                    let allFriendsUsernames = userObject!["friendsList"] as! String
+                    self.rankUsernameArray = allFriendsUsernames.componentsSeparatedByString(",")
+                    for friendusername in self.rankUsernameArray {
+                        let query = PFQuery(className: "_User")
+                        query.whereKey("username", equalTo: friendusername)
+                        query.getFirstObjectInBackgroundWithBlock {
+                            (object: PFObject?, error: NSError?) -> Void in
+                            if error != nil || object == nil {
+                                // Error occured
+                                print("Error00: Username: \(friendusername) -- \(error!) \(error!.description)")
+                            } else {
+                                let firstName = object!["firstName"] as! String
+                                let lastName = object!["lastName"] as! String
+                                let friendexperience = object!["experience"] as! String
+                                let friendfullName = "\(firstName) \(lastName)"
+                                let friendlevel = object!["level"] as! String
+                                self.rankArray.append(rankItem(fullName: "\(friendfullName)", username: "\(friendusername)", level: "\(friendlevel)", experience: "\(friendexperience)"))
+                                print(firstName)
+                                self.rankNameArray.append(friendfullName)
+                                self.rankLevelArray.append(friendlevel)
+                                print("#1 = \(self.rankArray[0].fullName)")
+                                // Now sort the array
+                                let result = self.rankArray.sortInPlace {
+                                    switch ($0.level,$1.level) {
+                                    // if neither “category" is nil and contents are equal,
+                                    case let (lhs,rhs) where lhs == rhs:
+                                        // compare “status” (> because DESC order)
+                                        return $0.experience > $1.experience
+                                    // else just compare “category” using <
+                                    case let (lhs, rhs):
+                                        return lhs > rhs
+                                    }
+                                }
+                                self.rankingTableView.reloadData()
                             }
                         }
                     }
@@ -597,33 +706,53 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
         print("accepted")
         let friendUser:String = self.requestUsername.text!
         let userQuery = PFQuery(className: "rider")
-        userQuery.whereKey("username", equalTo: friendUser)
+        userQuery.whereKey("username", equalTo: self.currentUser!.username!)
         userQuery.getFirstObjectInBackgroundWithBlock {
-            (friendObject: PFObject?, error: NSError?) -> Void in
-            if error != nil || friendObject == nil {
+            (userObject: PFObject?, error: NSError?) -> Void in
+            if error != nil || userObject == nil {
                 // Error occured
-                print("Error16: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
+                print("Error17 - acceptFriendRequestDidTouch: \(error!) \(error!.description)")
             } else {
-                var pendingDriver = friendObject!["pendingDriver"] as! String
-                if pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil{
-                    print("user exists in their pending already")
-                    self.displayOkayAlert("Error", message: "You already accepted \(friendUser)'s request.")
+                // Check if user has an active ride request
+                // If yes, displayOkayAlert that user cannot take on a ride request while having an active request
+                // If no, check if user is already on friend's pending driver's list
+                if((userObject!["status"] as! String) != "Waiting for user.") {
+                    self.displayOkayAlert("Job pending", message: "You cannot take on a ride request while you have an active request.")
                 } else {
-                    if(pendingDriver == "") {
-                        pendingDriver = "\(self.currentUser!.username!)"
-                    } else {
-                        pendingDriver = "\(pendingDriver),\(self.currentUser!.username!)"
-                    }
-                    friendObject!["pendingDriver"] = pendingDriver
-                    friendObject!.saveInBackgroundWithBlock {
-                        (success: Bool, error: NSError?) -> Void in
-                        if (success) {
-                            print("Friend's pending drivers has been updated.")
-                            self.displayOkayAlert("Request sent", message: "You accepted \(friendUser)'s request. Please wait for their confirmation.")
-                            self.friendListViewToDim.hidden = true
-                            self.activeRequestView.hidden = true
+                    // User does not have a active ride request, check if user is already on friend's pending driver's list
+                    // If yes, displayOkayAlert that user already accepted their friend's request
+                    // If no, add user to friend's pending driver list
+                    let friendQuery = PFQuery(className: "rider")
+                    friendQuery.whereKey("username", equalTo: friendUser)
+                    friendQuery.getFirstObjectInBackgroundWithBlock {
+                        (friendObject: PFObject?, error: NSError?) -> Void in
+                        if error != nil || friendObject == nil {
+                            // Error occured
+                            print("Error16: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
                         } else {
-                            print("Error: \(error!) \(error!.description)")
+                            var pendingDriver = friendObject!["pendingDriver"] as! String
+                            if pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil{
+                                print("user exists in their pending already")
+                                self.displayOkayAlert("Error", message: "You already accepted \(friendUser)'s request.")
+                            } else {
+                                if(pendingDriver == "") {
+                                    pendingDriver = "\(self.currentUser!.username!)"
+                                } else {
+                                    pendingDriver = "\(pendingDriver),\(self.currentUser!.username!)"
+                                }
+                                friendObject!["pendingDriver"] = pendingDriver
+                                friendObject!.saveInBackgroundWithBlock {
+                                    (success: Bool, error: NSError?) -> Void in
+                                    if (success) {
+                                        print("Friend's pending drivers has been updated.")
+                                        self.displayOkayAlert("Request sent", message: "You accepted \(friendUser)'s request. Please wait for their confirmation.")
+                                        self.friendListViewToDim.hidden = true
+                                        self.activeRequestView.hidden = true
+                                    } else {
+                                        print("Error: \(error!) \(error!.description)")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -763,7 +892,16 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
         self.inactiveRequestView.hidden = true
     }
     
+    @IBAction func cancelRankViewDidTouch(sender: AnyObject) {
+        self.rankViewToDim.hidden =  true
+        self.rankingSelectedUserView.hidden = true
+    }
+    
     override func viewDidLoad() {
+        // Setup delegates
+        self.rankingTableView.delegate = self
+        self.rankingTableView.dataSource = self
+        
         // Start by hiding newFriendButton
         self.newFriendButton.hidden = true
         self.activeRequestView.hidden = true
@@ -782,14 +920,25 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(mainVC.refresh(_:)), forControlEvents: .ValueChanged)
         friendTableView.addSubview(refreshControl)
+        rankingTableView.addSubview(refreshControl)
         
-        // Populate friend's table
-        self.friendStatusArray.removeAll()
-        self.friendStatusImageArray.removeAll()
-        self.friendNameArray.removeAll()
-        self.friendLevelArray.removeAll()
-        self.friendUsernameArray.removeAll()
-        self.updateFriendsTable()
+        if(viewSelect == false) { // FriendList selected
+            self.rankingView.hidden = true
+            // Populate friend's table
+            self.friendStatusArray.removeAll()
+            self.friendStatusImageArray.removeAll()
+            self.friendNameArray.removeAll()
+            self.friendLevelArray.removeAll()
+            self.friendUsernameArray.removeAll()
+            self.updateFriendsTable()
+        } else { // Ranking view selected
+            self.navigationItem.rightBarButtonItem = nil
+            self.rankViewToDim.hidden = true
+            self.rankingSelectedUserView.hidden = true
+            self.rankingView.hidden = false
+            self.rankArray.removeAll()
+            self.updateRankingTable()
+        }
         
         // Check if user has any pending friend requests
         self.checkForPendingRequests()

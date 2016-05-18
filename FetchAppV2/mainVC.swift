@@ -70,7 +70,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var dropoffAddress: UITextField!
     @IBOutlet weak var distanceLabel: UILabel!
     @IBOutlet weak var primaryStatusLabel: UILabel!
-    @IBOutlet weak var driverArrivedButton: UIButton!
     @IBOutlet weak var requestRideButton: UIButton!
     @IBOutlet weak var cancelRideButton: UIButton!
     @IBOutlet weak var selectADriverLabel: UILabel!
@@ -88,6 +87,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var taskPickupAddress: UILabel!
     @IBOutlet weak var taskDropoffAddress: UILabel!
     @IBOutlet weak var taskView: UIView!
+    @IBOutlet weak var travellingView: UIView!
+    @IBOutlet weak var travellingMapView: MKMapView!
+    @IBOutlet weak var travellingLabel: UILabel!
 
     /*
      * Custom functions
@@ -632,8 +634,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // Check that the user is not currently searching for a rider
         // If user is, then display an alert
         // Else, allow edit
-        if(requestCancel == true) { // If request has been set
+        if(self.primaryStatusLabel.text == "Searching for driver.") { // If request has been set
             self.displayOkayAlert("Request pending", message: "You must cancel the current request and submit a new one to change the pick-up address")
+            return
+        } else if(self.primaryStatusLabel.text != "Waiting for user.") { // If request has been set
+            self.displayOkayAlert("Job pending", message: "You cannot edit the pick-up address while you have an active request.")
             return
         }
         PickUpDropOff = false // false = pickUp
@@ -644,8 +649,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // Check that the user is not currently searching for a rider
         // If user is, then display an alert
         // Else, allow edit
-        if(requestCancel == true) { // If request has been set
+        if(self.primaryStatusLabel.text == "Searching for driver.") { // If request has been set
             self.displayOkayAlert("Request pending", message: "You must cancel the current request and submit a new one to change the drop-off address")
+            return
+        } else if(self.primaryStatusLabel.text != "Waiting for user.") { // If request has been set
+            self.displayOkayAlert("Job pending", message: "You cannot edit the drop-off address while you have an active request.")
             return
         }
         PickUpDropOff = true // true = dropOff
@@ -738,7 +746,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         
         // Change all necessary labels & buttons
         primaryStatusLabel.text = self.status
-        driverArrivedButton.hidden = true
+        driverArrived2Button.hidden = true
         cancelRideButton.hidden = false
         requestRideButton.hidden = true
         driverTableView.hidden = false
@@ -797,7 +805,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         
         // Change all necessary labels & buttons
         primaryStatusLabel.text = "Waiting for user."
-        driverArrivedButton.hidden = true
+        driverArrived2Button.hidden = true
         cancelRideButton.hidden = true
         requestRideButton.hidden = false
         driverTableView.hidden = true
@@ -812,12 +820,66 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
     }
     
+    // Still have to update database
     @IBAction func driverArrived2DidTouch(sender: AnyObject) {
         print("driver arrived2")
-        self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
-        self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
-        self.driverArrived2Button.backgroundColor = UIColor(red: 227/255, green: 67/255, blue: 69/255, alpha: 1)
-        self.driverArrived2Button.setTitle("I have arrived at my destination.", forState: .Normal)
+        if(self.primaryStatusLabel.text == "Waiting for driver.") {
+            self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
+            self.primaryStatusLabel.text = "Travelling..."
+            self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
+            self.driverArrived2Button.backgroundColor = UIColor(red: 227/255, green: 67/255, blue: 69/255, alpha: 1)
+            self.driverArrived2Button.setTitle("I have arrived at my destination.", forState: .Normal)
+            if currentUser != nil {
+                let userQuery = PFQuery(className: "rider")
+                userQuery.whereKey("username", equalTo:self.currentUser!.username!)
+                userQuery.getFirstObjectInBackgroundWithBlock {
+                    (userObject: PFObject?, error: NSError?) -> Void in
+                    if error == nil && userObject != nil {
+                        userObject!["status"] = "Travelling..."
+                        userObject!.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("User status updated to travelling")
+                            } else {
+                                print("Error16 - driverArrived2DidTouch: \(error!) \(error!.description)")
+                            }
+                        }
+                    } else {
+                        print("Error15 - driverArrived2DidTouch: \(error!) \(error!.description)")
+                    }
+                }
+            }
+            // Start mile tracking
+        } else if (self.primaryStatusLabel.text == "Travelling...") {
+            // end adventure
+            self.displayOkayAlert("Ending ride.", message: "You have travelled 10 miles.")
+            self.primaryStatusLabel.text = "Waiting for user."
+            self.driverArrived2Button.hidden = true
+            self.cancelRideButton.hidden = true
+            self.requestRideButton.hidden = false
+            self.letUsKnowLabel.hidden = true
+            self.driverArrived2Button.backgroundColor = UIColor(red: 77/255, green: 166/255, blue: 17/255, alpha: 1)
+            if currentUser != nil {
+                let userQuery = PFQuery(className: "rider")
+                userQuery.whereKey("username", equalTo:self.currentUser!.username!)
+                userQuery.getFirstObjectInBackgroundWithBlock {
+                    (userObject: PFObject?, error: NSError?) -> Void in
+                    if error == nil && userObject != nil {
+                        userObject!["status"] = "Waiting for user."
+                        userObject!.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("User status updated to Waiting for user.")
+                            } else {
+                                print("Error18 - driverArrived2DidTouch: \(error!) \(error!.description)")
+                            }
+                        }
+                    } else {
+                        print("Error17 - driverArrived2DidTouch: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        }
     }
     
     @IBAction func acceptDriverDidTouch(sender: AnyObject) {
@@ -861,7 +923,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                         self.driverArrived2Button.setTitle("\(self.selectedDriver) has arrived.", forState: .Normal)
                         self.driverArrived2Button.hidden = false
                         self.selectADriverLabel.hidden = true
-                        self.driverArrivedButton.hidden = false
                         self.cancelRideButton.hidden = true
                         self.requestRideButton.hidden = true
                     } else {
@@ -953,6 +1014,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.viewToDim.hidden = true
         self.letUsKnowLabel.hidden = true
         self.driverArrived2Button.hidden = true
+        self.travellingView.hidden = true
         self.driverArrived2Button.backgroundColor = UIColor(red: 77/255, green: 166/255, blue: 17/255, alpha: 1)
 
         // Implement slide-out menu button
@@ -962,8 +1024,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
         }
         
-        // Check if user is a driver
-        self.checkIfDriving()
+        // Setup default task view
+        self.taskDriverLabel.text = "No driving task"
+        self.taskDriverInfoLabel.text = "You currently are not driving anyone. Check your friend's list to see if anyone needs a ride."
+        self.taskPickupAddress.text = "N/A"
+        self.taskDropoffAddress.text = "N/A"
         
         // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
@@ -1017,8 +1082,13 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             // Set firstOpen to false
             self.firstOpen = false
             
+            // Check if user is a driver
+            self.checkIfDriving()
         // If application is returning from edit view
         } else if (self.returnFromEdit == true) {
+            // Check if user is a driver
+            self.checkIfDriving()
+            
             // 1) Set returnFromEdit back to false
             self.returnFromEdit = false
             
@@ -1031,6 +1101,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
             }
         } else {
+            // Check if user is a driver
+            self.checkIfDriving()
+            
             // Set pickup and dropoff address to previous set locations
             self.pickupAddress.text = self.pickupAddressVar
             self.dropoffAddress.text = self.dropoffAddressVar
@@ -1054,7 +1127,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                         
                         // Hide/Show buttons depending on status
                         if(self.status == "Waiting for user.") {
-                            self.driverArrivedButton.hidden = true
+                            self.driverArrived2Button.hidden = true
                             self.cancelRideButton.hidden = true
                             self.requestRideButton.hidden = false
                         } else {
@@ -1079,7 +1152,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                             if (self.status == "Searching for driver.") {
                                 print("searching")
                                 self.letUsKnowLabel.hidden = true
-                                self.driverArrivedButton.hidden = true
                                 self.driverArrived2Button.hidden = true
                                 self.cancelRideButton.hidden = false
                                 self.requestRideButton.hidden = true
@@ -1089,7 +1161,16 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 self.driverArrived2Button.setTitle("\(self.selectedDriver) has arrived.", forState: .Normal)
                                 self.driverTableView.hidden = true
                                 self.selectADriverLabel.hidden = true
-                                self.driverArrivedButton.hidden = false
+                                self.driverArrived2Button.hidden = false
+                                self.cancelRideButton.hidden = true
+                                self.requestRideButton.hidden = true
+                            } else if (self.status == "Travelling...") {
+                                self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
+                                self.driverArrived2Button.backgroundColor = UIColor(red: 227/255, green: 67/255, blue: 69/255, alpha: 1)
+                                self.driverArrived2Button.setTitle("I have arrived at my destination.", forState: .Normal)
+                                self.letUsKnowLabel.hidden = false
+                                self.driverTableView.hidden = true
+                                self.selectADriverLabel.hidden = true
                                 self.driverArrived2Button.hidden = false
                                 self.cancelRideButton.hidden = true
                                 self.requestRideButton.hidden = true
@@ -1100,7 +1181,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             }
         }
         if(primaryStatusLabel.text == "Waiting for user.") {
-            self.driverArrivedButton.hidden = true
             self.driverArrived2Button.hidden = true
             self.cancelRideButton.hidden = true
             self.requestRideButton.hidden = false

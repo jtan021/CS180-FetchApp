@@ -48,6 +48,7 @@
 		169A56741CD9B30700D97A82 /* loginRegisterVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56731CD9B30700D97A82 /* loginRegisterVC.swift */; };
 		169A56771CD9BEB300D97A82 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56761CD9BEB300D97A82 /* User.swift */; };
 		169A56791CD9BF3D00D97A82 /* locationSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */; };
+		16EB05C71CEC1EE800A953A9 /* rankingsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -117,6 +118,7 @@
 		169A56731CD9B30700D97A82 /* loginRegisterVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = loginRegisterVC.swift; path = ../loginRegisterVC.swift; sourceTree = "<group>"; };
 		169A56761CD9BEB300D97A82 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = locationSearchTable.swift; sourceTree = "<group>"; };
+		16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = rankingsCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -169,6 +171,7 @@
 				16095BB21CE54C4D0065D483 /* secondaryVC.swift */,
 				16095BA31CDD80E20065D483 /* availableDriverCell.swift */,
 				16095BB61CE599ED0065D483 /* friendsCell.swift */,
+				16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */,
 			);
 			name = Main/Secondary;
 			sourceTree = "<group>";
@@ -383,6 +386,11 @@
 					169A560F1CD9999200D97A82 = {
 						CreatedOnToolsVersion = 7.3;
 						DevelopmentTeam = 9DP9RLSMK2;
+						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
+						};
 					};
 					169A56231CD9999200D97A82 = {
 						CreatedOnToolsVersion = 7.3;
@@ -461,6 +469,7 @@
 				169A56701CD9A50E00D97A82 /* menuTableVC.swift in Sources */,
 				169A56771CD9BEB300D97A82 /* User.swift in Sources */,
 				1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */,
+				16EB05C71CEC1EE800A953A9 /* rankingsCell.swift in Sources */,
 				16095BB31CE54C4D0065D483 /* secondaryVC.swift in Sources */,
 				16095BB71CE599ED0065D483 /* friendsCell.swift in Sources */,
 				16095BA41CDD80E20065D483 /* availableDriverCell.swift in Sources */,
@@ -621,8 +630,13 @@
 				DEFINES_MODULE = YES;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/parse-library-1.12.0",
+					"$(inherited)/**",
+					"$(PROJECT_DIR)/parse-library-1.12.0/**",
+					"$(PROJECT_DIR)/**",
+					"$(SRCROOT)/**",
+					"$(PROJECT_DIR)/Cintric.framework/**",
+					"$(PROJECT_DIR)/Cintric.bundle/**",
+					"$(SRCROOT)/Framework/**",
 				);
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -642,8 +656,13 @@
 				DEFINES_MODULE = YES;
 				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/parse-library-1.12.0",
+					"$(inherited)/**",
+					"$(PROJECT_DIR)/parse-library-1.12.0/**",
+					"$(PROJECT_DIR)/**",
+					"$(SRCROOT)/**",
+					"$(PROJECT_DIR)/Cintric.framework/**",
+					"$(PROJECT_DIR)/Cintric.bundle/**",
+					"$(SRCROOT)/Framework/**",
 				);
 				INFOPLIST_FILE = FetchAppV2/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

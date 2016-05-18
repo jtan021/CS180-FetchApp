@@ -100,29 +100,53 @@ class menuTableVC: UITableViewController {
                         // Get information from database
                         let firstName = currentUser["firstName"] as! String
                         let lastName = currentUser["lastName"] as! String
-                        let level = currentUser["level"] as! String
                         let experience = currentUser["experience"] as! String
                         var doubleExperience = Double(experience)
-                        // Set precision of experience to 1 decimal places
-                        doubleExperience = Double(round(10*(doubleExperience)!)/10)
+                        var realLevel:Double = 0
+                        var realExperience: Double = 0
                         
-                        // Calculate experience range
-                        var experienceRange:Int = 10
-                        experienceRange = Int((Double(level)!*10/3))
-                        experienceRange = Int((Double(level)!*10/3))
-                        // Level -> Range
-                        // 1 -> 3
-                        // 2 -> 6
-                        // 3 -> 10
-                        // 4 -> 13
-                        // 5 -> 16
-                        // ...
-                        // 20 -> 66
+                        var foundLevel:Bool = false
+                        var baseLevel:Double = 1
+                        while(foundLevel == false) {
+                            let expCap = baseLevel*10/3
+                            // Level -> Range
+                            // 1 -> 3
+                            // 2 -> 6
+                            // 3 -> 10
+                            // 4 -> 13
+                            // 5 -> 16
+                            // ...
+                            // 20 -> 66
+                            if(doubleExperience! < 3) {
+                                foundLevel = true
+                                realLevel = 1
+                            } else if(doubleExperience! < expCap) {
+                                realLevel = baseLevel-1
+                                realExperience = doubleExperience!%(realLevel*10/3)
+                                foundLevel = true
+                            }
+                            baseLevel += 1
+                        }
+                        
+                        // Set precision of experience to 1 decimal places
+                        realExperience = Double(round(10*(realExperience))/10)
+                        var realCap = Int(round(realLevel+1)*10/3)
                         
                         // Set profileCell information
                         profileCell.fullName.text = "\(firstName) \(lastName)"
-                        profileCell.level.text = "Level \(level)"
-                        profileCell.experience.text = "Experience: \(doubleExperience!)/\(experienceRange)"
+                        profileCell.level.text = "Level \(Int(realLevel))"
+                        profileCell.experience.text = "Experience: \(realExperience)/\(realCap)"
+                        
+                        currentUser["level"] = "\(Int(realLevel))"
+                        currentUser.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("User level has been updated.")
+                                
+                            } else {
+                                print("Error - profile: \(error!) \(error!.description)")
+                            }
+                        }
                     }
                 })
             }
@@ -189,7 +213,7 @@ class menuTableVC: UITableViewController {
             } else if (indexPath.row == 4) {
                 // Show ranking
                 currentView = indexPath.row
-                
+                self.performSegueWithIdentifier("rankingListSegue", sender: self)
             } else if (indexPath.row == 5) {
                 // Show settings
                 currentView = indexPath.row
@@ -284,6 +308,16 @@ class menuTableVC: UITableViewController {
             self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
             destinationVC.distance = self.distance;
             print(distance)
+        } else if (segue.identifier == "friendListSegue") {
+            let DestViewController = segue.destinationViewController as! UINavigationController
+            let targetController = DestViewController.topViewController as! secondaryVC
+            targetController.viewSelect = false
+            targetController.navigationItem.title = "Friend's List"
+        } else if (segue.identifier == "rankingListSegue") {
+            let DestViewController = segue.destinationViewController as! UINavigationController
+            let targetController = DestViewController.topViewController as! secondaryVC
+            targetController.viewSelect = true
+            targetController.navigationItem.title = "Local Rankings"
         }
     }
     
