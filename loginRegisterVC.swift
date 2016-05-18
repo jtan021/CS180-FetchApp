@@ -143,6 +143,14 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                 user["status"] = "green"
                 user["currentLAT"] = "0"
                 user["currentLONG"] = "0"
+                let defaultACL = PFACL()
+                defaultACL.publicWriteAccess = true
+                defaultACL.publicReadAccess = true
+                PFACL.setDefaultACL(defaultACL, withAccessForCurrentUser:true)
+                user.ACL = defaultACL
+                let image = UIImagePNGRepresentation(UIImage(named: "gender_neutral_user")!)
+                let profilePic = PFFile(name: "profile.png", data: image!)
+                user["profilePic"] = profilePic
                 user.signUpInBackgroundWithBlock {
                     (succeeded, error) -> Void in
                     // If account creation failed, display error

@@ -16,15 +16,17 @@ struct rankItem {
     var username: String
     var level: String
     var experience: String
+    var profilePic: UIImage
 }
 
-class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource {
+class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     var currentUser = PFUser.currentUser()
     var friendNameArray = [String]()
     var friendUsernameArray = [String]()
     var friendLevelArray = [String]()
     var friendStatusArray = [String]()
     var friendStatusImageArray = [UIImage]()
+    var friendProfilePicArray = [UIImage]()
     var rankNameArray = [String]()
     var rankUsernameArray = [String]()
     var rankLevelArray = [String]()
@@ -36,7 +38,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     var userLocationLONG:Double = 0
     var locationManager = CLLocationManager()
     var rankArray = [rankItem]()
-    var viewSelect:Bool = false // False = friendListView, True = rankingView
+    var viewSelect:Int = 0 // 0 = friendListView, 1 = rankingView, 2 = editProfile
     
     @IBOutlet weak var menuButton: UIBarButtonItem!
     @IBOutlet weak var friendListView: UIView!
@@ -61,9 +63,16 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     @IBOutlet weak var rankViewFullName: UILabel!
     @IBOutlet weak var rankViewUsername: UILabel!
     @IBOutlet weak var rankViewLevel: UILabel!
+    @IBOutlet weak var rankViewProfilePic: UIImageView!
     @IBOutlet weak var rankingView: UIView!
     @IBOutlet weak var rankingSelectedUserView: UIView!
     @IBOutlet weak var rankingViewExperience: UILabel!
+    @IBOutlet weak var editProfileImage: UIImageView!
+    @IBOutlet weak var editProfileFirstName: UITextField!
+    @IBOutlet weak var editProfileLastName: UITextField!
+    @IBOutlet weak var editProfilePhoneNumber: UITextField!
+    @IBOutlet weak var editProfileEmailAddress: UITextField!
+    @IBOutlet weak var editProfileView: UIView!
     
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
@@ -361,6 +370,36 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         }
     }
     
+    func setupEditProfile() -> Void {
+        PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+            if let currentUser = currentUser as? PFUser {
+                let firstName = currentUser["firstName"] as! String
+                let lastName = currentUser["lastName"] as! String
+                let phoneNumber = currentUser["phoneNumber"] as! String
+                let profilePicData = currentUser["profilePic"] as! PFFile
+                profilePicData.getDataInBackgroundWithBlock({
+                    (imageData: NSData?, error: NSError?) -> Void in
+                    if (error == nil) {
+                        let profilePic = UIImage(data:imageData!)
+                        self.editProfileImage.image = profilePic
+                    }
+                })
+                let emailAddress = currentUser.email
+                self.editProfileFirstName.text = firstName
+                self.editProfileLastName.text = lastName
+                self.editProfilePhoneNumber.text = phoneNumber
+                self.editProfileEmailAddress.text = emailAddress
+            } else {
+                self.displayOkayAlert("Error", message: "An error occurred while obtaining your information from the database. Please reload the page.")
+                self.editProfileFirstName.text = ""
+                self.editProfileLastName.text = ""
+                self.editProfilePhoneNumber.text = ""
+                self.editProfileEmailAddress.text = ""
+                self.editProfileImage.image = UIImage(named: "gender_neutral_user")
+            }
+        })
+    }
+    
     // displayOkayAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
@@ -407,12 +446,14 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             friendCell.name.text = friendNameArray[indexPath.row]
             friendCell.level.text = friendLevelArray[indexPath.row]
             friendCell.status.image = friendStatusImageArray[indexPath.row]
+            friendCell.profilePic.image = friendProfilePicArray[indexPath.row]
             return friendCell
         } else {
             let rankCell = tableView.dequeueReusableCellWithIdentifier("rankingCell", forIndexPath: indexPath) as! rankingsCell
             rankCell.fullName.text = self.rankArray[indexPath.row].fullName
             rankCell.level.text = "Level \(self.rankArray[indexPath.row].level)"
             rankCell.rank.text = "\(indexPath.row + 1)"
+            rankCell.profilePic.image = self.rankArray[indexPath.row].profilePic
             return rankCell
         }
     }
@@ -427,6 +468,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             if(friendStatusArray[indexPath.row] == "red") {
                 self.requestFullName.text = self.friendNameArray[indexPath.row]
                 self.requestUsername.text = self.friendUsernameArray[indexPath.row]
+                self.requestUserPic.image = self.friendProfilePicArray[indexPath.row]
                 print(self.friendUsernameArray[indexPath.row])
                 let userQuery = PFQuery(className: "rider")
                 userQuery.whereKey("username", equalTo: self.friendUsernameArray[indexPath.row])
@@ -450,6 +492,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                 self.inactiveRequestFullName.text = self.friendNameArray[indexPath.row]
                 self.inactiveRequestUsername.text = self.friendUsernameArray[indexPath.row]
                 self.inactiveRequestLevel.text = self.friendLevelArray[indexPath.row]
+                self.inactiveRequestImage.image = self.friendProfilePicArray[indexPath.row]
                 self.friendListViewToDim.hidden = false
                 self.inactiveRequestView.hidden = false
             }
@@ -458,9 +501,10 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.rankViewLevel.text = "Level \(self.rankArray[indexPath.row].level)"
             self.rankViewUsername.text = self.rankArray[indexPath.row].username
             self.rankViewRank.text = "Rank \(indexPath.row + 1)"
-            var experience = Double("\(self.rankArray[indexPath.row].experience)")
-            var realExperience = Double(round(10*(experience!)/10))
+            let experience = Double("\(self.rankArray[indexPath.row].experience)")
+            let realExperience = Double(round(10*(experience!)/10))
             self.rankingViewExperience.text = "Total experience: \(realExperience)"
+            self.rankViewProfilePic.image = self.rankArray[indexPath.row].profilePic
             self.rankViewToDim.hidden = false
             self.rankingSelectedUserView.hidden = false
         }
@@ -562,23 +606,31 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                                 // Error occured
                                 print("Error00: Username: \(username) -- \(error!) \(error!.description)")
                             } else {
+                                let profilePicData = object!["profilePic"] as! PFFile
                                 let firstName = object!["firstName"] as! String
                                 let lastName = object!["lastName"] as! String
                                 let fullName = "\(firstName) \(lastName)"
                                 let level = object!["level"] as! String
                                 let status = object!["status"] as! String
-                                if(status == "red") {
-                                    self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
-                                } else if(status == "green") {
-                                    self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
-                                } else {
-                                    self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
-                                }
-                                self.friendNameArray.append(fullName)
-                                self.friendLevelArray.append("Level \(level)")
-                                self.friendStatusArray.append(status)
-                                self.friendTableView.reloadData()
-                                print(self.friendNameArray[0])
+                                profilePicData.getDataInBackgroundWithBlock({
+                                    (imageData: NSData?, error: NSError?) -> Void in
+                                    if (error == nil) {
+                                        let profilePic = UIImage(data:imageData!)
+                                        self.friendProfilePicArray.append(profilePic!)
+                                        if(status == "red") {
+                                            self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
+                                        } else if(status == "green") {
+                                            self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
+                                        } else {
+                                            self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
+                                        }
+                                        self.friendNameArray.append(fullName)
+                                        self.friendLevelArray.append("Level \(level)")
+                                        self.friendStatusArray.append(status)
+                                        self.friendTableView.reloadData()
+                                        print(self.friendNameArray[0])
+                                    }
+                                })
                             }
                         }
                     }
@@ -617,24 +669,28 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                                 let friendexperience = object!["experience"] as! String
                                 let friendfullName = "\(firstName) \(lastName)"
                                 let friendlevel = object!["level"] as! String
-                                self.rankArray.append(rankItem(fullName: "\(friendfullName)", username: "\(friendusername)", level: "\(friendlevel)", experience: "\(friendexperience)"))
-                                print(firstName)
-                                self.rankNameArray.append(friendfullName)
-                                self.rankLevelArray.append(friendlevel)
-                                print("#1 = \(self.rankArray[0].fullName)")
-                                // Now sort the array
-                                let result = self.rankArray.sortInPlace {
-                                    switch ($0.level,$1.level) {
-                                    // if neither “category" is nil and contents are equal,
-                                    case let (lhs,rhs) where lhs == rhs:
-                                        // compare “status” (> because DESC order)
-                                        return $0.experience > $1.experience
-                                    // else just compare “category” using <
-                                    case let (lhs, rhs):
-                                        return lhs > rhs
+                                let profilePicData = object!["profilePic"] as! PFFile
+                                profilePicData.getDataInBackgroundWithBlock({
+                                    (imageData: NSData?, error: NSError?) -> Void in
+                                    if (error == nil) {
+                                        let profilePic = UIImage(data:imageData!)
+                                        self.rankArray.append(rankItem(fullName: "\(friendfullName)", username: "\(friendusername)", level: "\(friendlevel)", experience: "\(friendexperience)", profilePic: profilePic!))
+                                        print(firstName)
+                                        // Now sort the array
+                                        let result = self.rankArray.sortInPlace {
+                                            switch ($0.level,$1.level) {
+                                            // if neither “category" is nil and contents are equal,
+                                            case let (lhs,rhs) where lhs == rhs:
+                                                // compare “status” (> because DESC order)
+                                                return $0.experience > $1.experience
+                                            // else just compare “category” using <
+                                            case let (lhs, rhs):
+                                                return lhs > rhs
+                                            }
+                                        }
+                                        self.rankingTableView.reloadData()
                                     }
-                                }
-                                self.rankingTableView.reloadData()
+                                })
                             }
                         }
                     }
@@ -689,6 +745,11 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             }
         })
         self.locationManager.stopUpdatingLocation()
+    }
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
+        self.editProfileImage.image = info[UIImagePickerControllerOriginalImage] as? UIImage
+        self.dismissViewControllerAnimated(true, completion: nil)
     }
     
     @IBAction func addFriendsDidTouch(sender: AnyObject) {
@@ -804,84 +865,6 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         }
     }
     
-//    @IBAction func acceptRequestDidTouch(sender: AnyObject) {
-//        print("accepted")
-//        let friendUser:String = self.requestUsername.text!
-//        let userQuery = PFQuery(className: "rider")
-//        userQuery.whereKey("username", equalTo: friendUser)
-//        userQuery.getFirstObjectInBackgroundWithBlock {
-//            (friendObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || friendObject == nil {
-//                // Error occured
-//                print("Error16: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-//            } else {
-//                var pendingDriver = friendObject!["pendingDriver"] as! String
-//                if pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil{
-//                    print("user exists in their pending already")
-//                    self.displayOkayAlert("Error", message: "You already accepted \(friendUser)'s request.")
-//                } else {
-//                    if(pendingDriver == "") {
-//                        pendingDriver = "\(self.currentUser!.username!)"
-//                    } else {
-//                        pendingDriver = "\(pendingDriver),\(self.currentUser!.username!)"
-//                    }
-//                    friendObject!["pendingDriver"] = pendingDriver
-//                    friendObject!.saveInBackgroundWithBlock {
-//                        (success: Bool, error: NSError?) -> Void in
-//                        if (success) {
-//                            print("Friend's pending drivers has been updated.")
-//                            self.displayOkayAlert("Request sent", message: "You accepted \(friendUser)'s request. Please wait for their confirmation.")
-//                            self.friendListViewToDim.hidden = true
-//                            self.activeRequestView.hidden = true
-//                        } else {
-//                            print("Error: \(error!) \(error!.description)")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        // Add user to friend's pendingList
-//    }
-//    
-//    @IBAction func cancelRequestDidTouch(sender: AnyObject) {
-//        let friendUser:String = self.requestUsername.text!
-//        let userQuery = PFQuery(className: "rider")
-//        userQuery.whereKey("username", equalTo: friendUser)
-//        userQuery.getFirstObjectInBackgroundWithBlock {
-//            (friendObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || friendObject == nil {
-//                // Error occured
-//                print("Error17: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-//            } else {
-//                var pendingDriver = friendObject!["pendingDriver"] as! String
-//                if ((pendingDriver == "") || (pendingDriver.rangeOfString("\(self.currentUser!.username!)") != nil)) {
-//                    print("user does not exist in the friend's pending already")
-//                    self.displayOkayAlert("Error", message: "You never accepted \(friendUser)'s request.")
-//                } else {
-//                    let newPendingDriver1:String = pendingDriver.stringByReplacingOccurrencesOfString((self.currentUser!.username!), withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                    let newPendingDriver2:String = pendingDriver.stringByReplacingOccurrencesOfString(",\(self.currentUser!.username!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                    
-//                    if(newPendingDriver2 == pendingDriver) {
-//                        friendObject!["pendingDriver"] = newPendingDriver1
-//                    } else {
-//                        friendObject!["pendingDriver"] = newPendingDriver2
-//                    }
-//                    friendObject!.saveInBackgroundWithBlock {
-//                        (success: Bool, error: NSError?) -> Void in
-//                        if (success) {
-//                            print("Friend's pending drivers has been updated.")
-//                            self.displayOkayAlert("Request cancelled", message: "You are no longer pending for \(friendUser)'s request.")
-//                            self.friendListViewToDim.hidden = true
-//                            self.activeRequestView.hidden = true
-//                        } else {
-//                            print("Error: \(error!) \(error!.description)")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-    
     @IBAction func activeRequestCloseDidTouch(sender: AnyObject) {
         self.friendListViewToDim.hidden = true
         self.activeRequestView.hidden = true
@@ -897,16 +880,51 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         self.rankingSelectedUserView.hidden = true
     }
     
+    @IBAction func editProfilePicDidTouch(sender: AnyObject) {
+        var myPickerController = UIImagePickerController()
+        myPickerController.delegate = self
+        myPickerController.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+        self.presentViewController(myPickerController, animated: true, completion: nil)
+    }
+    
+    @IBAction func saveProfileDidTouch(sender: AnyObject) {
+        if(self.editProfileEmailAddress.text == "" || self.editProfilePhoneNumber.text == "" || self.editProfileLastName.text == "" || self.editProfileFirstName.text == "") {
+            self.displayOkayAlert("Missing Information", message: "None of your profile information can be left blank.")
+            return
+        }
+        PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+            if let currentUser = currentUser as? PFUser {
+                let imageData: NSData = UIImageJPEGRepresentation(self.editProfileImage.image!, 0.5)!
+                let profilePic: PFFile = PFFile(name: "profile.png", data: imageData)!
+                currentUser["firstName"] = self.editProfileFirstName.text
+                currentUser["lastName"] = self.editProfileLastName.text
+                currentUser["phoneNumber"] = self.editProfilePhoneNumber.text
+                currentUser.email = self.editProfileEmailAddress.text
+                currentUser["profilePic"] = profilePic
+                currentUser.saveInBackgroundWithBlock {
+                    (success: Bool, error: NSError?) -> Void in
+                    if (success) {
+                        print("Successfuly updated profile.")
+                        self.displayOkayAlert("Update successful", message: "Your profile has been successfuly updated.")
+                    } else {
+                        print("Error - saveProfileDidTouch: \(error!) \(error!.description)")
+                    }
+                }
+            }
+        })
+    }
+    
     override func viewDidLoad() {
         // Setup delegates
         self.rankingTableView.delegate = self
         self.rankingTableView.dataSource = self
         
-        // Start by hiding newFriendButton
+        // Start by hiding specific views
         self.newFriendButton.hidden = true
         self.activeRequestView.hidden = true
         self.friendListViewToDim.hidden = true
         self.inactiveRequestView.hidden = true
+        self.editProfileView.hidden = true
         
         // Add menu button action
         if self.revealViewController() != nil {
@@ -922,7 +940,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         friendTableView.addSubview(refreshControl)
         rankingTableView.addSubview(refreshControl)
         
-        if(viewSelect == false) { // FriendList selected
+        if(viewSelect == 0) { // FriendList selected
             self.rankingView.hidden = true
             // Populate friend's table
             self.friendStatusArray.removeAll()
@@ -931,13 +949,17 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.friendLevelArray.removeAll()
             self.friendUsernameArray.removeAll()
             self.updateFriendsTable()
-        } else { // Ranking view selected
+        } else if (viewSelect == 1) { // Ranking view selected
             self.navigationItem.rightBarButtonItem = nil
             self.rankViewToDim.hidden = true
             self.rankingSelectedUserView.hidden = true
             self.rankingView.hidden = false
             self.rankArray.removeAll()
             self.updateRankingTable()
+        } else { // editProfile selected
+            self.navigationItem.rightBarButtonItem = nil
+            self.editProfileView.hidden = false
+            self.setupEditProfile()
         }
         
         // Check if user has any pending friend requests

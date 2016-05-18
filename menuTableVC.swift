@@ -93,6 +93,7 @@ class menuTableVC: UITableViewController {
         let cellIdentifier: String = menuItems[indexPath.row] as! String
         if(indexPath.row == 0) {
             let profileCell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier, forIndexPath: indexPath) as! profileModeCell
+            profileCell.userInteractionEnabled = false
             // 1) Authenticate user
             if currentUser != nil {
                 PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
@@ -104,6 +105,15 @@ class menuTableVC: UITableViewController {
                         var doubleExperience = Double(experience)
                         var realLevel:Double = 0
                         var realExperience: Double = 0
+                        
+                        let profilePicData = currentUser["profilePic"] as! PFFile
+                        profilePicData.getDataInBackgroundWithBlock({
+                            (imageData: NSData?, error: NSError?) -> Void in
+                            if (error == nil) {
+                                let profilePic = UIImage(data:imageData!)
+                                profileCell.profilePic.image = profilePic
+                            }
+                        })
                         
                         var foundLevel:Bool = false
                         var baseLevel:Double = 1
@@ -131,6 +141,9 @@ class menuTableVC: UITableViewController {
                         // Set precision of experience to 1 decimal places
                         realExperience = Double(round(10*(realExperience))/10)
                         var realCap = Int(round(realLevel+1)*10/3)
+                        if(realLevel == 1) {
+                            realCap = Int(round(realLevel)*10/3)
+                        }
                         
                         // Set profileCell information
                         profileCell.fullName.text = "\(firstName) \(lastName)"
@@ -217,7 +230,7 @@ class menuTableVC: UITableViewController {
             } else if (indexPath.row == 5) {
                 // Show settings
                 currentView = indexPath.row
-                
+                self.performSegueWithIdentifier("editProfileSegue", sender: self)
             } else if (indexPath.row == 6) {
                 // log out
                 // Check status of user in database "rider" class
@@ -311,13 +324,18 @@ class menuTableVC: UITableViewController {
         } else if (segue.identifier == "friendListSegue") {
             let DestViewController = segue.destinationViewController as! UINavigationController
             let targetController = DestViewController.topViewController as! secondaryVC
-            targetController.viewSelect = false
+            targetController.viewSelect = 0
             targetController.navigationItem.title = "Friend's List"
         } else if (segue.identifier == "rankingListSegue") {
             let DestViewController = segue.destinationViewController as! UINavigationController
             let targetController = DestViewController.topViewController as! secondaryVC
-            targetController.viewSelect = true
+            targetController.viewSelect = 1
             targetController.navigationItem.title = "Local Rankings"
+        } else if (segue.identifier == "editProfileSegue") {
+            let DestViewController = segue.destinationViewController as! UINavigationController
+            let targetController = DestViewController.topViewController as! secondaryVC
+            targetController.viewSelect = 2
+            targetController.navigationItem.title = "Edit Profile"
         }
     }
     

@@ -87,10 +87,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var taskPickupAddress: UILabel!
     @IBOutlet weak var taskDropoffAddress: UILabel!
     @IBOutlet weak var taskView: UIView!
-    @IBOutlet weak var travellingView: UIView!
-    @IBOutlet weak var travellingMapView: MKMapView!
-    @IBOutlet weak var travellingLabel: UILabel!
-
     /*
      * Custom functions
      * *Functions not being used
@@ -1014,7 +1010,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.viewToDim.hidden = true
         self.letUsKnowLabel.hidden = true
         self.driverArrived2Button.hidden = true
-        self.travellingView.hidden = true
         self.driverArrived2Button.backgroundColor = UIColor(red: 77/255, green: 166/255, blue: 17/255, alpha: 1)
 
         // Implement slide-out menu button
