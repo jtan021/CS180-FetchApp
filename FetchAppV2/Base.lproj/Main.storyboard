@@ -797,7 +797,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EKW-Pd-Iza" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-976.5" y="503.25"/>
+            <point key="canvasLocation" x="-97" y="503"/>
         </scene>
         <!--Reveal View Controller-->
         <scene sceneID="tne-QT-ifu">
@@ -1565,7 +1565,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RUy-HH-tDP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1179" y="833.25"/>
+            <point key="canvasLocation" x="1179" y="1081"/>
         </scene>
         <!--Friend's List-->
         <scene sceneID="SPx-ke-LGc">
@@ -4207,7 +4207,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="5uv-DF-dg0" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2563.5" y="1476"/>
+            <point key="canvasLocation" x="2563" y="1732"/>
         </scene>
         <!--mainVC-->
         <scene sceneID="y2C-q6-xsC">
@@ -4237,8 +4237,7 @@
                                                 <exclude reference="Nfb-dK-9W5"/>
                                             </mask>
                                         </variation>
-                                        <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                            <rect key="frame" x="111" y="12" width="196" height="24"/>
+                                        <variation key="heightClass=regular-widthClass=compact">
                                             <mask key="constraints">
                                                 <include reference="Nfb-dK-9W5"/>
                                             </mask>
@@ -4683,9 +4682,6 @@
                             <view alpha="0.5" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hpQ-JO-H8v">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
-                                <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="99" width="400" height="736"/>
-                                </variation>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="sze-FN-FIY">
                                 <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
@@ -5245,8 +5241,7 @@
                                         <exclude reference="yfN-Ju-L11"/>
                                     </mask>
                                 </variation>
-                                <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="107" width="400" height="736"/>
+                                <variation key="heightClass=regular-widthClass=compact">
                                     <mask key="subviews">
                                         <include reference="68g-34-Ntu"/>
                                         <include reference="8tM-hg-Lmq"/>
@@ -5361,8 +5356,7 @@
                                         <exclude reference="lLA-VG-puI"/>
                                     </mask>
                                 </variation>
-                                <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
-                                    <rect key="frame" x="0.0" y="126" width="400" height="320"/>
+                                <variation key="heightClass=regular-widthClass=compact">
                                     <mask key="subviews">
                                         <include reference="Ld9-L9-eKm"/>
                                         <include reference="0TJ-e1-ILF"/>
@@ -5650,7 +5644,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mno-kG-YCb" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1870.5" y="195.75"/>
+            <point key="canvasLocation" x="1896" y="-41.25"/>
         </scene>
         <!--Map SearchVC-->
         <scene sceneID="coG-sj-BP4">
@@ -5838,7 +5832,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="CKO-5N-y7M" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3309" y="195.75"/>
+            <point key="canvasLocation" x="3097" y="-41"/>
         </scene>
         <!--Map Search Table-->
         <scene sceneID="w2g-u2-cnd">
@@ -5927,7 +5921,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ey5-Vt-moG" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2563.5" y="195.75"/>
+            <point key="canvasLocation" x="2563" y="-41"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Djm-Ij-Kzf">
@@ -5945,7 +5939,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="juy-Cb-T05" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1870.5" y="833.25"/>
+            <point key="canvasLocation" x="1870" y="833"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="J7O-Bm-8L7">
@@ -5963,7 +5957,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="0mB-VN-dxe" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1870.5" y="1476"/>
+            <point key="canvasLocation" x="1870" y="1732"/>
         </scene>
     </scenes>
     <resources>
@@ -5981,7 +5975,7 @@
         <image name="street_view" width="48" height="48"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="3mQ-g0-DeD"/>
+        <segue reference="iQC-Dc-jI4"/>
         <segue reference="rgA-vT-ItC"/>
     </inferredMetricsTieBreakers>
 </document>

@@ -24,7 +24,7 @@ struct groupItem {
     var members: String
 }
 
-class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
     var currentUser = PFUser.currentUser()
     var friendNameArray = [String]()
     var friendUsernameArray = [String]()
@@ -89,6 +89,30 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     @IBOutlet weak var groupViewToDim: UIView!
     @IBOutlet weak var groupViewPopup: UIView!
 
+    
+    // Inputs: None
+    // Outputs; None
+    // Function: Dismisses the keyboard
+    func DismissKeyboard() {
+        view.endEditing(true)
+    }
+    
+    // textFieldShouldReturn()
+    // Add's done button to textfield
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func cancelNumberPad() {
+        self.editProfilePhoneNumber.resignFirstResponder()
+        self.editProfilePhoneNumber.text = ""
+    }
+    
+    func doneWithNumberPad() {
+        self.editProfilePhoneNumber.resignFirstResponder()
+    }
+    
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
@@ -1348,6 +1372,29 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
             self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
         }
+        
+        // Add keyboard stuff
+        // Set delegates
+        self.editProfileLastName.delegate = self
+        self.editProfileFirstName.delegate = self
+        self.editProfileEmailAddress.delegate = self
+        self.editProfilePhoneNumber.delegate = self
+        
+        self.editProfileEmailAddress.returnKeyType = UIReturnKeyType.Done
+        self.editProfileFirstName.returnKeyType = UIReturnKeyType.Done
+        self.editProfileLastName.returnKeyType = UIReturnKeyType.Done
+        self.editProfilePhoneNumber.keyboardType = UIKeyboardType.NumberPad
+        
+        // Add done button to number pad keyboard
+        let numberToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, 320, 50))
+        numberToolbar.barStyle = UIBarStyle.Default
+        numberToolbar.items = [UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Plain, target: self, action: #selector(secondaryVC.cancelNumberPad)), UIBarButtonItem(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil), UIBarButtonItem(title: "Done", style: .Done, target: self, action: #selector(secondaryVC.doneWithNumberPad))]
+        numberToolbar.sizeToFit()
+        self.editProfilePhoneNumber.inputAccessoryView = numberToolbar
+        
+        // Adds gesture so keyboard is dismissed when areas outside of editable text are tapped
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(secondaryVC.DismissKeyboard))
+        view.addGestureRecognizer(tap)
         
         // Add refresh action to driverTableView
         // Pull down to refresh
