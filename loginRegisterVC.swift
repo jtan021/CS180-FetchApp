@@ -119,14 +119,17 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
         // First check that all fields are filled out.
         if (embeddedFirstNameTextField.text == "" || embeddedLastNameTextField.text == "" || embeddedConfirmPasswordTextField.text == "" || embeddedEmailAddressTextField.text == "" || embeddedPhoneNumberTextField.text == "") {
             self.displayAlert("Missing field(s)", message: "All fields must be filled out.")
+            return
         } else {
             // Second check that the two passwords entered match
             if (embeddedPhoneNumberTextField.text!.characters.count != 10) {
                 print(embeddedPhoneNumberTextField.text!.characters.count)
                 self.displayAlert("Invalid phone number", message: "Please enter a valid 10 digit phone number including area code.")
+                return
             }
             if (passwordTextField.text != embeddedConfirmPasswordTextField.text) {
                 self.displayAlert("Invalid password", message: "The confirmed password must be identical to the previously entered password.")
+                return
             } else {
                 // Since fields are not nil and the passwords match, attempt to create the account
                 let user = PFUser()
