@@ -38,7 +38,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var currentLocation = CLLocation()
     var geoCoder: CLGeocoder?
     var PickUpDropOff: Bool = false // pickUp = false, dropOff = true
-    var distance: Double = 0
+    var distance: Double = 0.00
     var requestCancel: Bool = false // request = false, cancel = true
     var updatedPickUp:Bool = false
     var updatedDropOff:Bool = false
@@ -1161,7 +1161,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             // Set pickup and dropoff address to previous set locations
             self.pickupAddress.text = self.pickupAddressVar
             self.dropoffAddress.text = self.dropoffAddressVar
-            self.distanceLabel.text = "Approximate distance: \(String(format:"%f", self.distance))"
+            if(self.distance == 0) {
+                self.distanceLabel.text = "Approximate distance: 0 miles"
+            } else {
+                self.distanceLabel.text = "Approximate distance: \(self.distance) miles"
+            }
             self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
             // Check if user is currently using the application
             // 1) Authenticate user
