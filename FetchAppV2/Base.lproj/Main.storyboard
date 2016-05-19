@@ -513,8 +513,8 @@
                                     <constraint firstItem="ikZ-bX-FzC" firstAttribute="top" secondItem="qw5-Tj-t1Z" secondAttribute="bottom" constant="15" id="8d7-xJ-hVa"/>
                                     <constraint firstItem="8Zy-fa-7TI" firstAttribute="centerX" secondItem="jqI-zS-vQ6" secondAttribute="centerX" id="96e-Me-NHP"/>
                                     <constraint firstItem="eDs-EQ-OOb" firstAttribute="top" secondItem="8ZI-pU-ugC" secondAttribute="bottom" constant="15" id="B39-sd-NVw"/>
-                                    <constraint firstItem="8Zy-fa-7TI" firstAttribute="top" secondItem="jqI-zS-vQ6" secondAttribute="top" constant="85" id="CAI-M2-qzV"/>
-                                    <constraint firstAttribute="height" constant="700" id="DT0-mA-jFN"/>
+                                    <constraint firstItem="8Zy-fa-7TI" firstAttribute="top" secondItem="jqI-zS-vQ6" secondAttribute="top" constant="40" id="CAI-M2-qzV"/>
+                                    <constraint firstAttribute="height" constant="600" id="DT0-mA-jFN"/>
                                     <constraint firstItem="gMG-XA-O0K" firstAttribute="top" secondItem="ikZ-bX-FzC" secondAttribute="bottom" constant="3" id="Exu-aj-98A"/>
                                     <constraint firstItem="d3c-Xv-mhR" firstAttribute="centerX" secondItem="jqI-zS-vQ6" secondAttribute="centerX" id="G9W-tB-nst"/>
                                     <constraint firstItem="8ZI-pU-ugC" firstAttribute="top" secondItem="b1I-D9-vuu" secondAttribute="bottom" constant="3" id="GWE-lJ-8OI"/>
@@ -797,7 +797,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EKW-Pd-Iza" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-97" y="503"/>
+            <point key="canvasLocation" x="-331.5" y="503.25"/>
         </scene>
         <!--Reveal View Controller-->
         <scene sceneID="tne-QT-ifu">
@@ -1565,7 +1565,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RUy-HH-tDP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1179" y="1081"/>
+            <point key="canvasLocation" x="1179" y="832.5"/>
         </scene>
         <!--Friend's List-->
         <scene sceneID="SPx-ke-LGc">
@@ -5832,7 +5832,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="CKO-5N-y7M" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3097" y="-41"/>
+            <point key="canvasLocation" x="3327" y="-41.25"/>
         </scene>
         <!--Map Search Table-->
         <scene sceneID="w2g-u2-cnd">
@@ -5921,7 +5921,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ey5-Vt-moG" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2563" y="-41"/>
+            <point key="canvasLocation" x="2598" y="-41.25"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Djm-Ij-Kzf">
@@ -5975,7 +5975,7 @@
         <image name="street_view" width="48" height="48"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="iQC-Dc-jI4"/>
+        <segue reference="Ppb-3P-QLu"/>
         <segue reference="rgA-vT-ItC"/>
     </inferredMetricsTieBreakers>
 </document>
