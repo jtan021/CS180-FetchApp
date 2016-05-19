@@ -349,7 +349,7 @@ class menuTableVC: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         menuItems = ["profile", "home", "silentMode", "friendsList", "business", "ranking", "setting", "logOut"]
-        //self.tableView.reloadData()
+        self.tableView.reloadData()
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
