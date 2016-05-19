@@ -1140,7 +1140,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                     // Error occurred
                     print("Error userQuery - add member to groups: \(error!) \(error!.description)")
                 } else {
-                    // Group name does not exist under user, create group
+                    // Success
                     let allFriends = object!["friendsList"]
                     var allFriendsArray = [String]()
                     allFriendsArray = allFriends.componentsSeparatedByString(",")

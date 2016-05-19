@@ -391,6 +391,39 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         }
     }
     
+    func checkForBusinessJob() -> Void {
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "rider")
+            userQuery.whereKey("username", equalTo:self.currentUser!.username!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error == nil && userObject != nil {
+                    let prevBusinessJob = userObject!["businessJob"] as! String
+                    if(prevBusinessJob == "") {
+                        return
+                    } else {
+                        var businessJobArray = [String]()
+                        businessJobArray = prevBusinessJob.componentsSeparatedByString(",")
+                        for boss in businessJobArray {
+                            self.displayOkayAlert("New job notification", message: "\(boss) has sent you a job notification.")
+                        }
+                        userObject!["businessJob"] = ""
+                        userObject!.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("User business job updated.")
+                            } else {
+                                print("Error - checkForBusinessJob: \(error!) \(error!.description)")
+                            }
+                        }
+                    }
+                } else {
+                    print("Error2 - checkForBusinessJob: \(error!) \(error!.description)")
+                }
+            }
+        }
+    }
+    
     // Name: tableView
     // Inputs: None
     // Outputs: None
@@ -766,7 +799,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBAction func driverArrived2DidTouch(sender: AnyObject) {
         print("driver arrived2")
         if(self.primaryStatusLabel.text == "Waiting for driver.") {
-            self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
+            let alert = UIAlertController(title: "Starting mile tracker", message: "Let us know when you have arrived at your destination.", preferredStyle:  UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Okay", style: .Default, handler: { (action: UIAlertAction!) in
+                self.displayOkayAlert("Menu disabled", message: "In order to provide accurate mile tracking, the menu is temporarily disabled while travelling.")
+            }))
+            self.presentViewController(alert, animated: true, completion: nil)
             self.primaryStatusLabel.text = "Travelling..."
             self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
             self.driverArrived2Button.backgroundColor = UIColor(red: 227/255, green: 67/255, blue: 69/255, alpha: 1)
@@ -793,21 +830,20 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             }
             self.startLocation = nil
             self.travelling = true
-            //self.travellingMapView.mapType = MKMapType.Satellite
+            self.navigationItem.leftBarButtonItem?.enabled = false
             self.locationManager.delegate = self
             self.locationManager.desiredAccuracy = kCLLocationAccuracyBest //Accuracy
             self.locationManager.requestWhenInUseAuthorization() //Authorization
             self.locationManager.startUpdatingLocation()
             self.travellingView.hidden = false
             
-            // Remove menu temporarily
-//            self.view.removeGestureRecognizer(self.revealViewController().panGestureRecognizer())
-//            self.view.removeGestureRecognizer(self.revealViewController().tapGestureRecognizer())
-//            
-            //self.travellingLabel.text = "Tracking miles."
         } else if (self.primaryStatusLabel.text == "Travelling...") {
             // end adventure
-            self.displayOkayAlert("Ending ride.", message: "\(self.realTravelled) miles have been recorded and will be added to \(self.selectedDriver)'s account. Thank you for using FetchApp.")
+            let alert = UIAlertController(title: "Ending ride.", message: "\(self.realTravelled) miles have been recorded and will be added to \(self.selectedDriver)'s account. Thank you for using FetchApp.", preferredStyle:  UIAlertControllerStyle.Alert)
+            alert.addAction(UIAlertAction(title: "Okay", style: .Default, handler: { (action: UIAlertAction!) in
+                self.navigationItem.leftBarButtonItem?.enabled = true
+            }))
+            self.presentViewController(alert, animated: true, completion: nil)
             self.primaryStatusLabel.text = "Waiting for user."
             self.driverArrived2Button.hidden = true
             self.cancelRideButton.hidden = true
@@ -1026,6 +1062,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // Check for pendingExperience
         self.checkForPendingExperience()
         
+        // Check for pending jobs from business owners
+        self.checkForBusinessJob()
+        
         // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
             // 1) Set pickup address & coordinate to current location
@@ -1050,6 +1089,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["pendingDriver"] = ""
                 request["distance"] = "0"
                 request["pendingExperience"] = 0
+                request["businessJob"] = ""
                 request["status"] = "Waiting for user."
                 
                 // 2.3) Search the "rider" class in database for the user

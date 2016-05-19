@@ -48,6 +48,7 @@
 		169A56741CD9B30700D97A82 /* loginRegisterVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56731CD9B30700D97A82 /* loginRegisterVC.swift */; };
 		169A56771CD9BEB300D97A82 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56761CD9BEB300D97A82 /* User.swift */; };
 		169A56791CD9BF3D00D97A82 /* locationSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */; };
+		16E88FF91CEDB89900018BF9 /* businessVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E88FF81CEDB89900018BF9 /* businessVC.swift */; };
 		16EB05C71CEC1EE800A953A9 /* rankingsCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */; };
 /* End PBXBuildFile section */
 
@@ -118,6 +119,7 @@
 		169A56731CD9B30700D97A82 /* loginRegisterVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = loginRegisterVC.swift; path = ../loginRegisterVC.swift; sourceTree = "<group>"; };
 		169A56761CD9BEB300D97A82 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = locationSearchTable.swift; sourceTree = "<group>"; };
+		16E88FF81CEDB89900018BF9 /* businessVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = businessVC.swift; sourceTree = "<group>"; };
 		16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = rankingsCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -172,6 +174,7 @@
 				16095BA31CDD80E20065D483 /* availableDriverCell.swift */,
 				16095BB61CE599ED0065D483 /* friendsCell.swift */,
 				16EB05C61CEC1EE800A953A9 /* rankingsCell.swift */,
+				16E88FF81CEDB89900018BF9 /* businessVC.swift */,
 			);
 			name = Main/Secondary;
 			sourceTree = "<group>";
@@ -467,6 +470,7 @@
 				169A56141CD9999200D97A82 /* AppDelegate.swift in Sources */,
 				16095BB51CE587A70065D483 /* profileModeCell.swift in Sources */,
 				169A56701CD9A50E00D97A82 /* menuTableVC.swift in Sources */,
+				16E88FF91CEDB89900018BF9 /* businessVC.swift in Sources */,
 				169A56771CD9BEB300D97A82 /* User.swift in Sources */,
 				1688FD1A1CDA901A00456B26 /* silentModeCell.swift in Sources */,
 				16EB05C71CEC1EE800A953A9 /* rankingsCell.swift in Sources */,

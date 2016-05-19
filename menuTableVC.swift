@@ -261,16 +261,19 @@ class menuTableVC: UITableViewController {
                 // Show friend's list
                 currentView = indexPath.row
                 self.performSegueWithIdentifier("friendListSegue", sender: self)
-                
             } else if (indexPath.row == 4) {
+                // Show businss
+                currentView = indexPath.row
+                self.performSegueWithIdentifier("businessSegue", sender: self)
+            } else if (indexPath.row == 5) {
                 // Show ranking
                 currentView = indexPath.row
                 self.performSegueWithIdentifier("rankingListSegue", sender: self)
-            } else if (indexPath.row == 5) {
+            } else if (indexPath.row == 6) {
                 // Show settings
                 currentView = indexPath.row
                 self.performSegueWithIdentifier("editProfileSegue", sender: self)
-            } else if (indexPath.row == 6) {
+            } else {
                 // log out
                 // Check status of user in database "rider" class
                 // 1) Authenticate user
@@ -344,7 +347,7 @@ class menuTableVC: UITableViewController {
     */
     override func viewDidLoad() {
         super.viewDidLoad()
-        menuItems = ["profile", "home", "silentMode", "friendsList", "ranking", "setting", "logOut"]
+        menuItems = ["profile", "home", "silentMode", "friendsList", "business", "ranking", "setting", "logOut"]
         //self.tableView.reloadData()
     }
     
