@@ -136,13 +136,13 @@ class loginRegisterVC: UIViewController, UITextFieldDelegate {
                 user["firstName"] = embeddedFirstNameTextField.text
                 user["lastName"] = embeddedLastNameTextField.text
                 user["level"] = "1"
-                user["experience"] = "0"
+                user["experience"] = 0
                 user["friends"] = ""
                 user["pending"] = ""
                 user["phoneNumber"] = embeddedPhoneNumberTextField.text
                 user["status"] = "green"
-                user["currentLAT"] = "0"
-                user["currentLONG"] = "0"
+                user["currentLAT"] = 0
+                user["currentLONG"] = 0
                 let defaultACL = PFACL()
                 defaultACL.publicWriteAccess = true
                 defaultACL.publicReadAccess = true

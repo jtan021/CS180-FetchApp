@@ -53,6 +53,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var pendingFriendLevelArray = [String]()
     var pendingFriendDistanceArray = [String]()
     var pendingDriversArray = [String]()
+    var pendingFriendProfilePicArray = [UIImage]()
     var pendingDistance:Double = -1
     var friendLocationLAT:Double = 0
     var friendLocationLONG:Double = 0
@@ -60,7 +61,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var riderUser: String = ""
     var riderPickupAddress: String = ""
     var riderDropoffAddress: String = ""
-    //var isADriver: Bool = false
+    typealias CompletionHandler = (success:Bool) -> Void
+    
     /*
      * Outlets
      */
@@ -248,7 +250,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Inputs: CLLocationCoordinate2D, CLLocationCoordinate2D
     // Outputs: None
     // Function: Updates the pendingDistance variable with the driving distance between two CLLocationCooordinate2D objects. Used for calculating distance between user and pending driver.
-    func updatePendingDistance(coordinate1:CLLocationCoordinate2D, coordinate2: CLLocationCoordinate2D) -> Void {
+    func updatePendingDistance(coordinate1:CLLocationCoordinate2D, coordinate2: CLLocationCoordinate2D, completionHandler: CompletionHandler) -> Void {
         var routeDetails: MKRoute?
         let directionsRequest: MKDirectionsRequest = MKDirectionsRequest()
         let placemark1: MKPlacemark = MKPlacemark(coordinate: CLLocationCoordinate2DMake(coordinate1.latitude, coordinate1.longitude), addressDictionary: nil)
@@ -266,6 +268,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             routeDetails = response.routes.first!;
             let realDistance = (routeDetails!.distance / 1609.344)
             self.pendingDistance = Double(round(100*realDistance)/100)
+            let flag = true
+            completionHandler(success: flag)
         }
     }
     
@@ -306,6 +310,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         cell.driverName.text = self.pendingFriendFullNameArray[indexPath.row]
         cell.driverLevel.text = self.pendingFriendLevelArray[indexPath.row]
         cell.driverDistance.text = self.pendingFriendDistanceArray[indexPath.row]
+        cell.profilePic.image = self.pendingFriendProfilePicArray[indexPath.row]
         if(cell.driverDistance.text == "Getting distance...") {
             self.refresh(UIRefreshControl())
         }
@@ -323,167 +328,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.driverViewFullName.text = self.pendingFriendFullNameArray[indexPath.row]
         self.driverViewUsername.text = self.pendingFriendUsernameArray[indexPath.row]
         self.driverViewLevel.text = self.pendingFriendLevelArray[indexPath.row]
+        self.driverViewPic.image = self.pendingFriendProfilePicArray[indexPath.row]
         self.viewToDim.hidden = false
         self.driverView.hidden = false
         
     }
-    
-//    // Name: checkForPendingFriends
-//    // Inputs: None
-//    func checkForPendingFriends() -> Void {
-//        if currentUser != nil {
-//            let userQuery = PFQuery(className: "friends")
-//            userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
-//            userQuery.getFirstObjectInBackgroundWithBlock {
-//                (userObject: PFObject?, error: NSError?) -> Void in
-//                if error != nil || userObject == nil {
-//                    // Error occured
-//                    print("Error12: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-//                } else {
-//                    let pendingList:String = userObject!["pendingFrom"] as! String
-//                    if(pendingList != "") {
-//                        var pendingArray = [String]()
-//                        pendingArray = pendingList.componentsSeparatedByString(",")
-//                        for pendingFriend in pendingArray {
-//                            if(pendingFriend != "") {
-//                                let alert = UIAlertController(title: "New friend pending", message: "\(pendingFriend) requested to add you to their friend's list.", preferredStyle:  UIAlertControllerStyle.Alert)
-//                                alert.addAction(UIAlertAction(title: "Accept", style: .Default, handler: { (action: UIAlertAction!) in
-//                                    self.updateFriendsList(pendingFriend)
-//                                }))
-//                                alert.addAction(UIAlertAction(title: "Ignore", style: .Default, handler: { (action: UIAlertAction!) in
-//                                    print("ignored")
-//                                }))
-//                                alert.addAction(UIAlertAction(title: "Decline", style: .Default, handler: { (action: UIAlertAction!) in
-//                                    self.removePendingFriend(pendingFriend)
-//                                }))
-//                                self.presentViewController(alert, animated: true, completion: nil)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    
-//    func updateFriendsList(friendUser: String) -> Void {
-//        // 1) Update user's friendList with new friend
-//        let userQuery = PFQuery(className: "friends")
-//        userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
-//        userQuery.getFirstObjectInBackgroundWithBlock {
-//            (userObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || userObject == nil {
-//                // Error occured
-//                print("Error13: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-//            } else {
-//                var friendList:String = userObject!["friendsList"] as! String
-//                if(friendList == "") {
-//                    friendList = "\(friendUser)"
-//                } else {
-//                    friendList = "\(friendList),\(friendUser)"
-//                }
-//                userObject!["friendsList"] = friendList
-//                userObject!.saveInBackgroundWithBlock {
-//                    (success: Bool, error: NSError?) -> Void in
-//                    if (success) {
-//                        print("userObject updated")
-//                        self.displayOkayAlert("Friend list updated", message: "You and \(friendUser) are now friends.")
-//                    } else {
-//                        print("Error updating user's friend list: \(error!) \(error!.description)")
-//                    }
-//                }
-//            }
-//        }
-//        
-//        // 2) Update friend's friend list with user
-//        let friendQuery = PFQuery(className: "friends")
-//        friendQuery.whereKey("username", equalTo: friendUser)
-//        friendQuery.getFirstObjectInBackgroundWithBlock {
-//            (friendObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || friendObject == nil {
-//                // Error occured
-//                print("Error14: Username: \(friendUser) -- \(error!) \(error!.description)")
-//            } else {
-//                var friendList:String = friendObject!["friendsList"] as! String
-//                if(friendList == "") {
-//                    friendList = "\(self.currentUser!.username!)"
-//                } else {
-//                    friendList = "\(friendList),\(self.currentUser!.username!)"
-//                }
-//                friendObject!["friendsList"] = friendList
-//                friendObject!.saveInBackgroundWithBlock {
-//                    (success: Bool, error: NSError?) -> Void in
-//                    if (success) {
-//                        print("friendObject updated")
-//                    } else {
-//                        print("Error updating friend's friendlist: \(error!) \(error!.description)")
-//                    }
-//                }
-//            }
-//        }
-//        
-//        self.removePendingFriend(friendUser)
-//    }
-//    
-//    func removePendingFriend(friendUser: String) -> Void {
-//        // 1) Remove pending user from user's pending
-//        let userQuery = PFQuery(className: "friends")
-//        userQuery.whereKey("username", equalTo: (self.currentUser?.username!)!)
-//        userQuery.getFirstObjectInBackgroundWithBlock {
-//            (userObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || userObject == nil {
-//                // Error occured
-//                print("Error13: Username: \((self.currentUser?.username!)!) -- \(error!) \(error!.description)")
-//            } else {
-//                let pendingList:String = userObject!["pendingFrom"] as! String
-//                let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString(friendUser, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(friendUser)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                
-//                if(newPendingList2 == pendingList) {
-//                    userObject!["pendingFrom"] = newPendingList1
-//                } else {
-//                    userObject!["pendingFrom"] = newPendingList2
-//                }
-//                
-//                userObject!.saveInBackgroundWithBlock {
-//                    (success: Bool, error: NSError?) -> Void in
-//                    if (success) {
-//                        print("userObject deleted pending friend \(friendUser)")
-//                    } else {
-//                        print("Error deleting user's prending friend: \(error!) \(error!.description)")
-//                    }
-//                }
-//            }
-//        }
-//        
-//        // 2) Remove pending user from friend's pending
-//        let friendQuery = PFQuery(className: "friends")
-//        friendQuery.whereKey("username", equalTo: friendUser)
-//        friendQuery.getFirstObjectInBackgroundWithBlock {
-//            (friendObject: PFObject?, error: NSError?) -> Void in
-//            if error != nil || friendObject == nil {
-//                // Error occured
-//                print("Error14: Username: \(friendUser) -- \(error!) \(error!.description)")
-//            } else {
-//                let pendingList:String = friendObject!["pendingTo"] as! String
-//                let newPendingList1:String = pendingList.stringByReplacingOccurrencesOfString((self.currentUser!.username!), withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                let newPendingList2:String = pendingList.stringByReplacingOccurrencesOfString(",\(self.currentUser!.username!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
-//                
-//                if(newPendingList2 == pendingList) {
-//                    friendObject!["pendingTo"] = newPendingList1
-//                } else {
-//                    friendObject!["pendingTo"] = newPendingList2
-//                }
-//                friendObject!.saveInBackgroundWithBlock {
-//                    (success: Bool, error: NSError?) -> Void in
-//                    if (success) {
-//                        print("friendObject deleted pending user \(self.currentUser?.username!)")
-//                    } else {
-//                        print("Error deleting friend's pending friend: \(error!) \(error!.description)")
-//                    }
-//                }
-//            }
-//        }
-//    }
     
     // refresh
     // Input: UIRefreshControl
@@ -558,6 +407,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.pendingFriendDistanceArray.removeAll()
         self.pendingFriendLevelArray.removeAll()
         self.pendingFriendUsernameArray.removeAll()
+        self.pendingFriendProfilePicArray.removeAll()
         
         // Query database for pendingDrivers
         if currentUser != nil {
@@ -592,28 +442,31 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 let friendLONG:String = object!["currentLONG"] as! String
                                 self.friendLocationLAT = Double(friendLAT)!
                                 self.friendLocationLONG = Double(friendLONG)!
-                                print("friendLocationLAT = \(self.friendLocationLAT)")
-                                print("friendLocationLONG = \(self.friendLocationLONG)")
-                                print("userLocationLAT = \(self.userLocationLAT)")
-                                print("userLocationLONG = \(self.userLocationLONG)")
-                                print("userCoordinate = \(self.pickupCoordinate)")
-                                let userCoordinate = CLLocationCoordinate2DMake(self.userLocationLAT, self.userLocationLONG)
-                                let friendCoordinate = CLLocationCoordinate2DMake(self.friendLocationLAT, self.friendLocationLONG)
-                                if(CLLocationCoordinate2DIsValid(userCoordinate) && CLLocationCoordinate2DIsValid(friendCoordinate)) {
-                                    print("both coordinates valid")
-                                    self.updatePendingDistance(self.pickupCoordinate, coordinate2: friendCoordinate)
-                                    if(self.pendingDistance >= 0) {
-                                        self.pendingFriendDistanceArray.append("\(self.pendingDistance) miles")
-                                    } else {
-                                        self.pendingFriendDistanceArray.append("Getting distance...")
+                                let profilePicData = object!["profilePic"] as! PFFile
+                                profilePicData.getDataInBackgroundWithBlock({
+                                    (imageData: NSData?, error: NSError?) -> Void in
+                                    if (error == nil) {
+                                        let profilePic = UIImage(data:imageData!)
+                                        self.pendingFriendProfilePicArray.append(profilePic!)
+                                        print(profilePic!)
+                                        let userCoordinate = CLLocationCoordinate2DMake(self.userLocationLAT, self.userLocationLONG)
+                                        let friendCoordinate = CLLocationCoordinate2DMake(self.friendLocationLAT, self.friendLocationLONG)
+                                        if(CLLocationCoordinate2DIsValid(userCoordinate) && CLLocationCoordinate2DIsValid(friendCoordinate)) {
+                                            print("both coordinates valid")
+                                            self.updatePendingDistance(self.pickupCoordinate, coordinate2: friendCoordinate, completionHandler: { (success) -> Void in
+                                                if(success) {
+                                                    self.pendingFriendDistanceArray.append("\(self.pendingDistance) miles")
+                                                    self.pendingFriendFullNameArray.append(fullName)
+                                                    self.pendingFriendLevelArray.append("Level \(level)")
+                                                    self.pendingFriendUsernameArray.append(driverUser)
+                                                    self.driverTableView.reloadData()
+                                                }
+                                            })
+                                        } else {
+                                            print("something went wrong")
+                                        }
                                     }
-                                } else {
-                                    print("something went wrong")
-                                }
-                                self.pendingFriendFullNameArray.append(fullName)
-                                self.pendingFriendLevelArray.append("Level \(level)")
-                                self.pendingFriendUsernameArray.append(driverUser)
-                                self.driverTableView.reloadData()
+                                })
                             }
                         }
                     }
@@ -1040,11 +893,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 let request = PFObject(className: "rider")
                 request["username"] = currentUser!.username!
                 request["pickupAddress"] = ""
-                request["pickupCoordinateLAT"] = "0"
-                request["pickupCoordinateLONG"] = "0"
+                request["pickupCoordinateLAT"] = 0
+                request["pickupCoordinateLONG"] = 0
                 request["dropoffAddress"] = ""
-                request["dropoffCoordinateLAT"] = "0"
-                request["dropoffCoordinateLONG"] = "0"
+                request["dropoffCoordinateLAT"] = 0
+                request["dropoffCoordinateLONG"] = 0
                 request["driver"] = ""
                 request["pendingDriver"] = ""
                 request["distance"] = "0"

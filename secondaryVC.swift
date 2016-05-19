@@ -19,6 +19,11 @@ struct rankItem {
     var profilePic: UIImage
 }
 
+struct groupItem {
+    var groupName: String
+    var members: String
+}
+
 class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     var currentUser = PFUser.currentUser()
     var friendNameArray = [String]()
@@ -32,14 +37,17 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     var rankLevelArray = [String]()
     var userFriend:String?
     var inputTextField: UITextField?
+    var groupInputTextField: UITextField?
     var pendingList:String = ""
     var pendingArray = [String]()
     var userLocationLAT:Double = 0
     var userLocationLONG:Double = 0
     var locationManager = CLLocationManager()
     var rankArray = [rankItem]()
+    var groupArray = [groupItem]()
     var viewSelect:Int = 0 // 0 = friendListView, 1 = rankingView, 2 = editProfile
-    
+    var characterSet:NSCharacterSet = NSCharacterSet(charactersInString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLKMNOPQRSTUVWXYZ0123456789")
+
     @IBOutlet weak var menuButton: UIBarButtonItem!
     @IBOutlet weak var friendListView: UIView!
     @IBOutlet weak var friendTableView: UITableView!
@@ -73,7 +81,14 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     @IBOutlet weak var editProfilePhoneNumber: UITextField!
     @IBOutlet weak var editProfileEmailAddress: UITextField!
     @IBOutlet weak var editProfileView: UIView!
-    
+    @IBOutlet weak var groupView: UIView!
+    @IBOutlet weak var groupTableView: UITableView!
+    @IBOutlet weak var groupViewName: UILabel!
+    @IBOutlet weak var groupViewMembers: UITextView!
+    @IBOutlet weak var groupViewInput: UITextField!
+    @IBOutlet weak var groupViewToDim: UIView!
+    @IBOutlet weak var groupViewPopup: UIView!
+
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
@@ -400,6 +415,39 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         })
     }
     
+    func respondToSwipeGesture(gesture: UIGestureRecognizer) {
+        if let swipeGesture = gesture as? UISwipeGestureRecognizer {
+            switch swipeGesture.direction {
+            case UISwipeGestureRecognizerDirection.Right:
+                print("Swiped right")
+            case UISwipeGestureRecognizerDirection.Down:
+                print("Swiped down")
+            case UISwipeGestureRecognizerDirection.Left:
+                print("Swiped left")
+            case UISwipeGestureRecognizerDirection.Up:
+                print("Swiped up")
+            default:
+                break
+            }
+        }
+    }
+    
+//    func animateDropDownToFrame(frame: CGRect, completion:() -> Void) {
+//        if (!self.isAnimating) {
+//            self.isAnimating = true
+//            UIView.animateWithDuration(0.5, delay: 0.0, options: UIViewAnimationOptions.CurveEaseInOut, animations: { () -> Void in
+//                
+//                self.dropDownGroup.frame = frame
+//                
+//                }, completion: { (completed: Bool) -> Void in
+//                    self.isAnimating = false
+//                    if (completed) {
+//                        completion()
+//                    }
+//            })
+//        }
+//    }
+    
     // displayOkayAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
@@ -414,14 +462,32 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     // Input: UIRefreshControl
     // Output: None
     // Function: Function for refreshing the tableview
-    func refresh(refreshControl: UIRefreshControl) {
+    func refreshFriendsTable(refreshControl: UIRefreshControl) {
         self.updateFriendsTable()
-        self.updateRankingTable()
         self.friendTableView.reloadData()
-        self.rankingTableView.reloadData()
-        //self.sendOutPendingRequests()
         refreshControl.endRefreshing()
     }
+    
+    // refresh
+    // Input: UIRefreshControl
+    // Output: None
+    // Function: Function for refreshing the tableview
+    func refreshRankingTable(refreshControl: UIRefreshControl) {
+        self.updateRankingTable()
+        self.rankingTableView.reloadData()
+        refreshControl.endRefreshing()
+    }
+    
+    // refresh
+    // Input: UIRefreshControl
+    // Output: None
+    // Function: Function for refreshing the tableview
+    func refreshGroupTable(refreshControl: UIRefreshControl) {
+        self.updateGroupTable()
+        self.groupTableView.reloadData()
+        refreshControl.endRefreshing()
+    }
+    
     
     // Name: tableView
     // Inputs: None
@@ -430,9 +496,11 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if(tableView == self.friendTableView) {
             return friendNameArray.count
-        } else {
+        } else if (tableView == self.rankingTableView) {
             print(rankArray.count)
             return rankArray.count
+        } else {
+            return groupArray.count
         }
     }
     
@@ -448,13 +516,18 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             friendCell.status.image = friendStatusImageArray[indexPath.row]
             friendCell.profilePic.image = friendProfilePicArray[indexPath.row]
             return friendCell
-        } else {
+        } else if (tableView == self.rankingTableView) {
             let rankCell = tableView.dequeueReusableCellWithIdentifier("rankingCell", forIndexPath: indexPath) as! rankingsCell
             rankCell.fullName.text = self.rankArray[indexPath.row].fullName
             rankCell.level.text = "Level \(self.rankArray[indexPath.row].level)"
             rankCell.rank.text = "\(indexPath.row + 1)"
             rankCell.profilePic.image = self.rankArray[indexPath.row].profilePic
             return rankCell
+        } else {
+            let cellIdentifier: String = self.groupArray[indexPath.row].groupName
+            let groupCell = tableView.dequeueReusableCellWithIdentifier("groupCell", forIndexPath: indexPath) as! UITableViewCell
+            groupCell.textLabel!.text = cellIdentifier
+            return groupCell
         }
     }
     
@@ -483,7 +556,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                         let distance = userObject!["distance"] as! String
                         self.requestPickupAddress.text = pickupAddress
                         self.requestDropoffAddress.text = dropoffAddress
-                        self.requestDistance.text = "Approximate ride distance: \(distance) miles"
+                        self.requestDistance.text = "Approximate distance: \(distance) miles"
                         self.friendListViewToDim.hidden = false
                         self.activeRequestView.hidden = false
                     }
@@ -496,7 +569,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                 self.friendListViewToDim.hidden = false
                 self.inactiveRequestView.hidden = false
             }
-        } else {
+        } else if (tableView == self.rankingTableView) {
             self.rankViewFullName.text = self.rankArray[indexPath.row].fullName
             self.rankViewLevel.text = "Level \(self.rankArray[indexPath.row].level)"
             self.rankViewUsername.text = self.rankArray[indexPath.row].username
@@ -507,11 +580,23 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.rankViewProfilePic.image = self.rankArray[indexPath.row].profilePic
             self.rankViewToDim.hidden = false
             self.rankingSelectedUserView.hidden = false
+        } else { //Tableview == groupTableView
+            if(indexPath.row == 0) {
+                self.updateFriendsTable()
+                self.groupView.hidden = true
+            } else {
+                self.groupViewName.text = self.groupArray[indexPath.row].groupName
+                self.groupViewMembers.text = self.groupArray[indexPath.row].members
+                self.groupViewToDim.hidden = false
+                self.groupViewPopup.hidden = false
+            }
         }
     }
     
     func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
         if(tableView == self.friendTableView) {
+            return true
+        } else if (tableView == self.groupTableView && indexPath.row != 0) {
             return true
         }
         return false
@@ -576,6 +661,26 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                 }))
                 alert.addAction(UIAlertAction(title: "No", style: UIAlertActionStyle.Default, handler: nil))
                 self.presentViewController(alert, animated: true, completion: nil)
+            }
+        } else { // Group tableView
+            let groupName = groupArray[indexPath.row].groupName
+            let groupQuery = PFQuery(className: "groups")
+            groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+            groupQuery.whereKey("groupName", equalTo: groupName)
+            groupQuery.getFirstObjectInBackgroundWithBlock {
+                (groupObject: PFObject?, error: NSError?) -> Void in
+                if (error == nil) {
+                    groupObject?.deleteInBackgroundWithBlock{ (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("group deleted")
+                            self.groupArray.removeAtIndex(indexPath.row)
+                            self.updateGroupTable()
+                            self.groupTableView.reloadData()
+                        } else {
+                            print("Error with deleting group: \(error!) \(error!.description)")
+                        }
+                    }
+                }
             }
         }
     }
@@ -694,6 +799,31 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    func updateGroupTable() -> Void {
+        self.groupArray.removeAll()
+        self.groupArray.append(groupItem(groupName: "All friends", members: ""))
+        if (currentUser != nil) {
+            let groupQuery = PFQuery(className: "groups")
+            groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+            groupQuery.findObjectsInBackgroundWithBlock {
+                (groupObjects: [PFObject]?, error: NSError?) -> Void in
+                if error == nil && groupObjects != nil {
+                    // Search succeeded
+                    if let groupObjects = groupObjects {
+                        for group in groupObjects {
+                            let groupName = group["groupName"] as! String
+                            let groupMembers = group["members"] as! String
+                            self.groupArray.append(groupItem(groupName: groupName, members: groupMembers))
+                            self.groupTableView.reloadData()
+                        }
+                    }
+                } else {
+                    print("Error updateGroupTable: \(error!) \(error!.description)")
                 }
             }
         }
@@ -914,8 +1044,287 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         })
     }
     
+    @IBAction func showGroupsDidTouch(sender: AnyObject) {
+        if(self.groupView.hidden == false) {
+            self.groupView.hidden = true
+        } else {
+            self.groupView.hidden = false
+        }
+    }
+    
+    @IBAction func createNewGroupDidTouch(sender: AnyObject) {
+        let alertController: UIAlertController = UIAlertController(title: "New Group", message: "What would you like to name this group?", preferredStyle: .Alert)
+        let newGroup: UIAlertAction = UIAlertAction(title: "Create", style: .Default) { action -> Void in
+            // Check that input is valid
+            if(self.groupInputTextField!.text! == "") {
+                self.displayOkayAlert("Invalid Entry", message: "Group name cannot be empty.")
+                return
+            }
+            
+            //Check if group exists under user
+            let groupName = self.groupInputTextField!.text!
+            let groupQuery = PFQuery(className: "groups")
+            groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+            groupQuery.whereKey("groupName", equalTo: groupName)
+            groupQuery.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error == nil || object != nil {
+                    // Group name exists under user
+                    self.displayOkayAlert("Invalid group name", message: "Each group you create must be unique.")
+                } else {
+                    // Group name does not exist under user, create group
+                    let newGroupObject = PFObject(className: "groups")
+                    newGroupObject["username"] = self.currentUser?.username!
+                    newGroupObject["groupName"] = "\(groupName)"
+                    newGroupObject["members"] = ""
+                    let defaultACL = PFACL()
+                    defaultACL.publicWriteAccess = true
+                    defaultACL.publicReadAccess = true
+                    PFACL.setDefaultACL(defaultACL, withAccessForCurrentUser:true)
+                    newGroupObject.ACL = defaultACL
+                    newGroupObject.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("\(groupName) successfully created.")
+                            self.displayOkayAlert("Group created", message: "\(groupName) successfully created. Click on it to add friends.")
+                            self.groupArray.append((groupItem(groupName: "\(groupName)", members: "")))
+                            self.groupTableView.reloadData()
+                        } else {
+                            print("Error - groups: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+        alertController.addAction(newGroup)
+        //Create and add the Cancel action
+        let cancelAction: UIAlertAction = UIAlertAction(title: "Cancel", style: .Default) { action -> Void in
+            print("Canceled")
+        }
+        alertController.addAction(cancelAction)
+        //Add a text field
+        alertController.addTextFieldWithConfigurationHandler { textField -> Void in
+            self.groupInputTextField = textField
+        }
+        self.presentViewController(alertController, animated: true, completion: nil)
+    }
+    
+    @IBAction func groupViewAddDidTouch(sender: AnyObject) {
+        if(self.groupViewInput.text == "") {
+            self.displayOkayAlert("Missing field", message: "You must specify a FetchApp account username to add or delete friends from a group.")
+            return
+        }
+        let inputFriendUsername = self.groupViewInput.text
+        let groupName = self.groupViewName.text
+        // Check if inputFriendUsername exists in group already
+        let prevFriend:String = self.groupViewMembers.text
+        var prevFriendArray = [String]()
+        var friendExist:Bool = false
+        prevFriendArray = prevFriend.componentsSeparatedByString(",")
+        for friend in prevFriendArray {
+            if(friend == inputFriendUsername) {
+                friendExist = true
+            }
+        }
+        if(friendExist == true) {
+            self.displayOkayAlert("Error", message: "\(inputFriendUsername!) already exists in \(groupName!).")
+            return
+        } else {
+            // Check if inputFriendUsername is on friend's list
+            var friendExist2:Bool = false
+            let userQuery = PFQuery(className: "friends")
+            userQuery.whereKey("username", equalTo: self.currentUser!.username!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occurred
+                    print("Error userQuery - add member to groups: \(error!) \(error!.description)")
+                } else {
+                    // Group name does not exist under user, create group
+                    let allFriends = object!["friendsList"]
+                    var allFriendsArray = [String]()
+                    allFriendsArray = allFriends.componentsSeparatedByString(",")
+                    for friend in allFriendsArray {
+                        if(friend == inputFriendUsername) {
+                            friendExist2 = true
+                        }
+                    }
+                    if(friendExist2 == false) {
+                        self.displayOkayAlert("Error", message: "\(inputFriendUsername!) does not exist on your friend's list. Add them to your friend's list first in order to place them in a group.")
+                    } else {
+                        let groupQuery = PFQuery(className: "groups")
+                        groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+                        groupQuery.whereKey("groupName", equalTo: groupName!)
+                        groupQuery.getFirstObjectInBackgroundWithBlock {
+                            (object: PFObject?, error: NSError?) -> Void in
+                            if error != nil || object == nil {
+                                // Error occurred
+                                print("Error - add member to groups: \(error!) \(error!.description)")
+                            } else {
+                                // Group name does not exist under user, create group
+                                let prevMembers = object!["members"] as! String
+                                var newMembers = ""
+                                if(prevMembers == "") {
+                                    newMembers = "\(inputFriendUsername!)"
+                                } else {
+                                    newMembers = "\(prevMembers),\(inputFriendUsername!)"
+                                }
+                                object!["members"] = newMembers
+                                object!.saveInBackgroundWithBlock {
+                                    (success: Bool, error: NSError?) -> Void in
+                                    if (success) {
+                                        print("\(groupName) successfully updated.")
+                                        self.updateGroupTable()
+                                        self.groupTableView.reloadData()
+                                        self.displayOkayAlert("\(groupName!) updated", message: "\(inputFriendUsername!) has been added to \(groupName!).")
+                                        self.groupViewMembers.text = newMembers
+                                    } else {
+                                        print("Error - add member to groups: \(error!) \(error!.description)")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @IBAction func groupViewRemoveDidTouch(sender: AnyObject) {
+        if(self.groupViewInput.text == "") {
+            self.displayOkayAlert("Missing field", message: "You must specify a FetchApp account username to add or delete friends from a group.")
+            return
+        }
+        let inputFriendUsername = self.groupViewInput.text
+        if(self.groupViewMembers.text == "") {
+            self.displayOkayAlert("Error", message: "\(inputFriendUsername!) does not exist in \(self.groupViewName.text!)")
+        }
+        let groupName = self.groupViewName.text
+        let prevFriend:String = self.groupViewMembers.text
+        var prevFriendArray = [String]()
+        var friendExist:Bool = false
+        prevFriendArray = prevFriend.componentsSeparatedByString(",")
+        for friend in prevFriendArray {
+            if(friend == inputFriendUsername) {
+                friendExist = true
+            }
+        }
+        if(friendExist == false) {
+            self.displayOkayAlert("Error", message: "\(inputFriendUsername!) does not exist in \(self.groupViewName.text!)")
+        } else {
+            let groupQuery = PFQuery(className: "groups")
+            groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+            groupQuery.whereKey("groupName", equalTo: groupName!)
+            groupQuery.getFirstObjectInBackgroundWithBlock {
+                (object: PFObject?, error: NSError?) -> Void in
+                if error != nil || object == nil {
+                    // Error occurred
+                    print("Error - remove member from groups: \(error!) \(error!.description)")
+                } else {
+                    // Group name does not exist under user, create group
+                    let prevMembers = object!["members"] as! String
+                    let newMembers1:String = prevMembers.stringByReplacingOccurrencesOfString(inputFriendUsername!, withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                    let newMembers2:String = prevMembers.stringByReplacingOccurrencesOfString(",\(inputFriendUsername!)", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+                    var newMembers = ""
+                    if(newMembers2 == prevMembers) {
+                        newMembers = newMembers1
+                    } else {
+                        newMembers = newMembers2
+                    }
+                    object!["members"] = newMembers
+                    object!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("\(groupName!) successfully updated.")
+                            self.updateGroupTable()
+                            self.groupTableView.reloadData()
+                            self.displayOkayAlert("\(groupName!) updated", message: "\(inputFriendUsername!) has been removed from \(groupName!).")
+                            self.groupViewMembers.text = newMembers
+                        } else {
+                            print("Error - remove member from groups: \(error!) \(error!.description)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    @IBAction func groupViewShowDidTouch(sender: AnyObject) {
+        let groupName = self.groupViewName.text
+        if(self.groupViewMembers.text == "") {
+            self.displayOkayAlert("Error", message: "Cannot display this group because there are no members.")
+            return
+        }
+        self.friendStatusArray.removeAll()
+        self.friendStatusImageArray.removeAll()
+        self.friendNameArray.removeAll()
+        self.friendLevelArray.removeAll()
+        self.friendUsernameArray.removeAll()
+        let groupQuery = PFQuery(className: "groups")
+        groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
+        groupQuery.whereKey("groupName", equalTo: groupName!)
+        groupQuery.getFirstObjectInBackgroundWithBlock {
+            (object: PFObject?, error: NSError?) -> Void in
+            if error != nil || object == nil {
+                // Error occurred
+                print("Error - group view show: \(error!) \(error!.description)")
+            } else {
+                let friendsInGroup = object!["members"] as! String
+                var friendsInGroupArray = [String]()
+                friendsInGroupArray = friendsInGroup.componentsSeparatedByString(",")
+                for username in friendsInGroupArray {
+                    let query = PFQuery(className: "_User")
+                    query.whereKey("username", equalTo: username)
+                    query.getFirstObjectInBackgroundWithBlock {
+                        (object: PFObject?, error: NSError?) -> Void in
+                        if error != nil || object == nil {
+                            // Error occured
+                            print("Error Show: Username: \(username) -- \(error!) \(error!.description)")
+                        } else {
+                            let profilePicData = object!["profilePic"] as! PFFile
+                            let firstName = object!["firstName"] as! String
+                            let lastName = object!["lastName"] as! String
+                            let fullName = "\(firstName) \(lastName)"
+                            let level = object!["level"] as! String
+                            let status = object!["status"] as! String
+                            profilePicData.getDataInBackgroundWithBlock({
+                                (imageData: NSData?, error: NSError?) -> Void in
+                                if (error == nil) {
+                                    let profilePic = UIImage(data:imageData!)
+                                    self.friendProfilePicArray.append(profilePic!)
+                                    if(status == "red") {
+                                        self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
+                                    } else if(status == "green") {
+                                        self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
+                                    } else {
+                                        self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
+                                    }
+                                    self.friendNameArray.append(fullName)
+                                    self.friendLevelArray.append("Level \(level)")
+                                    self.friendStatusArray.append(status)
+                                    self.friendTableView.reloadData()
+                                    print(self.friendNameArray[0])
+                                }
+                            })
+                        }
+                    }
+                }
+                self.groupViewToDim.hidden = true
+                self.groupViewPopup.hidden = true
+                self.groupView.hidden = true
+            }
+        }
+
+    }
+    
+    @IBAction func groupViewCancelDidTouch(sender: AnyObject) {
+        self.groupViewToDim.hidden = true
+        self.groupViewPopup.hidden = true
+    }
+
     override func viewDidLoad() {
         // Setup delegates
+        super.viewDidLoad()
         self.rankingTableView.delegate = self
         self.rankingTableView.dataSource = self
         
@@ -925,6 +1334,12 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         self.friendListViewToDim.hidden = true
         self.inactiveRequestView.hidden = true
         self.editProfileView.hidden = true
+        self.groupView.hidden = true
+        self.groupViewToDim.hidden = true
+        self.groupViewPopup.hidden = true
+        
+        // Setup group for FriendsList
+        self.groupArray = [(groupItem(groupName: "All friends", members: ""))]
         
         // Add menu button action
         if self.revealViewController() != nil {
@@ -935,12 +1350,18 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         
         // Add refresh action to driverTableView
         // Pull down to refresh
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(mainVC.refresh(_:)), forControlEvents: .ValueChanged)
-        friendTableView.addSubview(refreshControl)
-        rankingTableView.addSubview(refreshControl)
+        let refreshFriendControl = UIRefreshControl()
+        refreshFriendControl.addTarget(self, action: #selector(secondaryVC.refreshFriendsTable(_:)), forControlEvents: .ValueChanged)
+        let refreshRankingControl = UIRefreshControl()
+        refreshRankingControl.addTarget(self, action: #selector(secondaryVC.refreshRankingTable(_:)), forControlEvents: .ValueChanged)
+        let refreshGroupControl = UIRefreshControl()
+        refreshGroupControl.addTarget(self, action: #selector(secondaryVC.refreshGroupTable(_:)), forControlEvents: .ValueChanged)
+        friendTableView.addSubview(refreshFriendControl)
+        rankingTableView.addSubview(refreshRankingControl)
+        groupTableView.addSubview(refreshGroupControl)
         
         if(viewSelect == 0) { // FriendList selected
+            self.updateGroupTable()
             self.rankingView.hidden = true
             // Populate friend's table
             self.friendStatusArray.removeAll()
@@ -949,6 +1370,16 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.friendLevelArray.removeAll()
             self.friendUsernameArray.removeAll()
             self.updateFriendsTable()
+            
+            // Add dropDownGroup swipe gesture
+//            let swipeDown = UISwipeGestureRecognizer(target: self, action: "showDropDownView:")
+//            swipeDown.direction = UISwipeGestureRecognizerDirection.Down
+//            self.view.addGestureRecognizer(swipeDown)
+//            
+//            let swipeUp = UISwipeGestureRecognizer(target: self, action: "hideDropDownView:")
+//            swipeUp.direction = UISwipeGestureRecognizerDirection.Up
+//            self.view.addGestureRecognizer(swipeUp)
+            
         } else if (viewSelect == 1) { // Ranking view selected
             self.navigationItem.rightBarButtonItem = nil
             self.rankViewToDim.hidden = true

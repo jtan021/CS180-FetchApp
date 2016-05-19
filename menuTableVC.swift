@@ -208,16 +208,33 @@ class menuTableVC: UITableViewController {
                     silentCell.silentModeLabel.text = "Silent Mode: OFF"
                     silentMode = false
                     tableView.reloadData()
-                    return
-                }
-                if(!silentMode) {
+                } else if(!silentMode) {
                     print("On")
                     silentCell.silentModeLabel.text = "Silent Mode: ON"
                     silentMode = true
                     tableView.reloadData()
-                    return
                 }
-                
+                PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                    if let currentUser = currentUser as? PFUser {
+                        if(currentUser["status"] as! String == "red") {
+                            print("status is already red, do nothing")
+                            return
+                        } else if(self.silentMode == false) {
+                            currentUser["status"] = "green"
+                        } else if (self.silentMode == true) {
+                            currentUser["status"] = "grey"
+                        }
+                        currentUser.saveInBackgroundWithBlock {
+                            (success: Bool, error: NSError?) -> Void in
+                            if (success) {
+                                print("Status successfuly updated")
+                            } else {
+                                print("Error - silentMode: \(error!) \(error!.description)")
+                            }
+                        }
+                    }
+                })
+                return
             } else if (indexPath.row == 3) {
                 // Show friend's list
                 currentView = indexPath.row
