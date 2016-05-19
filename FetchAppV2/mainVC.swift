@@ -844,7 +844,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             
         } else if (self.primaryStatusLabel.text == "Travelling...") {
             // end adventure
-            let alert = UIAlertController(title: "Ending ride.", message: "\(self.realTravelled) miles have been recorded and will be added to \(self.selectedDriver)'s account. Thank you for using FetchApp.", preferredStyle:  UIAlertControllerStyle.Alert)
+            let alert = UIAlertController(title: "Ending Ride", message: "\(self.realTravelled) miles have been recorded and will be added to \(self.selectedDriver)'s account. Thank you for using FetchApp.", preferredStyle:  UIAlertControllerStyle.Alert)
             alert.addAction(UIAlertAction(title: "Okay", style: .Default, handler: { (action: UIAlertAction!) in
                 self.navigationItem.leftBarButtonItem?.enabled = true
             }))
