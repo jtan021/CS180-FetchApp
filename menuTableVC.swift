@@ -103,6 +103,7 @@ class menuTableVC: UITableViewController {
                         let lastName = currentUser["lastName"] as! String
                         let experience = currentUser["experience"] as! String
                         var doubleExperience = Double(experience)
+                        print(doubleExperience)
                         var realLevel:Double = 0
                         var realExperience: Double = 0
                         
@@ -117,33 +118,53 @@ class menuTableVC: UITableViewController {
                         
                         var foundLevel:Bool = false
                         var baseLevel:Double = 1
-                        while(foundLevel == false) {
-                            let expCap = baseLevel*10/3
-                            // Level -> Range
-                            // 1 -> 3
-                            // 2 -> 6
-                            // 3 -> 10
-                            // 4 -> 13
-                            // 5 -> 16
-                            // ...
-                            // 20 -> 66
-                            if(doubleExperience! < 3) {
-                                foundLevel = true
-                                realLevel = 1
-                            } else if(doubleExperience! < expCap) {
-                                realLevel = baseLevel-1
-                                realExperience = doubleExperience!%(realLevel*10/3)
-                                foundLevel = true
+                        var tempExperience:Double = doubleExperience!
+                        
+                        if(doubleExperience! < 3) {
+                            realLevel = 1
+                            realExperience = doubleExperience!
+                        } else {
+                            var expCap = baseLevel*10/3
+                            tempExperience = doubleExperience! - expCap
+                            while(tempExperience > 0) {
+                                baseLevel+=1
+                                expCap = baseLevel*10/3
+                                realExperience = tempExperience
+                                tempExperience = tempExperience - expCap
                             }
-                            baseLevel += 1
+                            realLevel = baseLevel
                         }
+//                        while(foundLevel == false) {
+//                            let expCap = baseLevel*10/3
+//                            // Level -> Range
+//                            // 1 -> 3
+//                            // 2 -> 6
+//                            // 3 -> 10
+//                            // 4 -> 13
+//                            // 5 -> 16
+//                            // ...
+//                            // 20 -> 66
+//                            if(doubleExperience! < 3) {
+//                                foundLevel = true
+//                                realLevel = 1
+//                            } else if(expCap - tempExperience > 0) {
+//                                foundLevel = true
+//                                realLevel = baseLevel - 1
+//                                realExperience = tempExperience
+//                            } else {
+//                                tempExperience = tempExperience - expCap
+//                            }
+//                            baseLevel += 1
+//                        }
                         
                         // Set precision of experience to 1 decimal places
                         realExperience = Double(round(10*(realExperience))/10)
-                        var realCap = Int(round(realLevel+1)*10/3)
-                        if(realLevel == 1) {
-                            realCap = Int(round(realLevel)*10/3)
-                        }
+                        var realCap = Int(round(realLevel)*10/3)
+//                        if(realLevel == 1) {
+//                            realCap = Int(round(realLevel)*10/3)
+//                        } else {
+//                            realCap = Int(round(realLevel+1)*10/3)
+//                        }
                         
                         // Set profileCell information
                         profileCell.fullName.text = "\(firstName) \(lastName)"
@@ -160,6 +181,7 @@ class menuTableVC: UITableViewController {
                                 print("Error - profile: \(error!) \(error!.description)")
                             }
                         }
+                        //self.tableView.reloadData()
                     }
                 })
             }
@@ -323,6 +345,7 @@ class menuTableVC: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         menuItems = ["profile", "home", "silentMode", "friendsList", "ranking", "setting", "logOut"]
+        //self.tableView.reloadData()
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {

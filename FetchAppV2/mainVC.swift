@@ -23,6 +23,10 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
      * Constants
      */
     var locationManager = CLLocationManager()
+    var startLocation: CLLocation!
+    var lastLocation: CLLocation!
+    var travelledDistance:Double = 0
+    var realTravelled:Double = 0
     var currentLocation = CLLocation()
     var geoCoder: CLGeocoder?
     var PickUpDropOff: Bool = false // pickUp = false, dropOff = true
@@ -62,7 +66,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var riderPickupAddress: String = ""
     var riderDropoffAddress: String = ""
     typealias CompletionHandler = (success:Bool) -> Void
-    
+    var travelling:Bool = false
+    var myLocations: [CLLocation] = []
     /*
      * Outlets
      */
@@ -89,6 +94,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var taskPickupAddress: UILabel!
     @IBOutlet weak var taskDropoffAddress: UILabel!
     @IBOutlet weak var taskView: UIView!
+    @IBOutlet weak var travellingView: UIView!
+    @IBOutlet weak var travellingMapView: MKMapView!
+    @IBOutlet weak var travellingLabel: UILabel!
+    
+    
     /*
      * Custom functions
      * *Functions not being used
@@ -139,35 +149,78 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Outputs: None
     // Function: First gets user's current location to initialize pickupCoordinate at startup and update currentLAT and currentLONG in database. Then geocodes user's current location.
     func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        // Stop getting User's location
-        self.locationManager.stopUpdatingLocation()
         // Get coordinates from location and update pickupCoordinate
         let location: CLLocation = locations.first!
-        let coordinate: CLLocationCoordinate2D = location.coordinate
-        pickupCoordinate = CLLocationCoordinate2DMake(coordinate.latitude, coordinate.longitude)
         
-        // Get user's current location in latitude and longitude and initializes userLocationLAT and userLocationLONG
-        let currlocation = locations.last! as CLLocation
-        self.userLocationLAT = currlocation.coordinate.latitude
-        self.userLocationLONG = currlocation.coordinate.longitude
-        // Save user's latitude and longitude to ParseDB
-        PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
-            if let currentUser = currentUser as? PFUser {
-                currentUser["currentLAT"] = "\(self.userLocationLAT)"
-                currentUser["currentLONG"] = "\(self.userLocationLONG)"
-                currentUser.saveInBackgroundWithBlock {
-                    (success: Bool, error: NSError?) -> Void in
-                    if (success) {
-                        print("User currentLAT & currentLONG has been updated.")
-                    } else {
-                        print("Error1 - locationManager: \(error!) \(error!.description)")
+        // Stop getting User's location
+        if(travelling == false) {
+            self.locationManager.stopUpdatingLocation()
+            // Get user's current location in latitude and longitude and initializes userLocationLAT and userLocationLONG
+            let coordinate: CLLocationCoordinate2D = location.coordinate
+            pickupCoordinate = CLLocationCoordinate2DMake(coordinate.latitude, coordinate.longitude)
+            let currlocation = locations.last! as CLLocation
+            self.userLocationLAT = currlocation.coordinate.latitude
+            self.userLocationLONG = currlocation.coordinate.longitude
+            // Save user's latitude and longitude to ParseDB
+            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                if let currentUser = currentUser as? PFUser {
+                    currentUser["currentLAT"] = "\(self.userLocationLAT)"
+                    currentUser["currentLONG"] = "\(self.userLocationLONG)"
+                    currentUser.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("User currentLAT & currentLONG has been updated.")
+                        } else {
+                            print("Error1 - locationManager: \(error!) \(error!.description)")
+                        }
                     }
                 }
+            })
+            
+            // geoCode location
+            geoCode(location)
+        } else {
+            // Tracking
+            if self.startLocation == nil {
+                self.startLocation = locations.first
             }
-        })
-        
-        // geoCode location
-        geoCode(location)
+            //
+            myLocations.append(locations[0] as CLLocation)
+            
+            if (myLocations.count > 1){
+                var sourceIndex = myLocations.count - 1
+                var destinationIndex = myLocations.count - 2
+                
+                let c1 = myLocations[sourceIndex].coordinate
+                let c2 = myLocations[destinationIndex].coordinate
+                var a = [c1, c2]
+                var polyline = MKPolyline(coordinates: &a, count: a.count)
+                travellingMapView.addOverlay(polyline)
+            }
+            //
+            self.lastLocation = locations.last
+            self.travelledDistance = startLocation.distanceFromLocation(lastLocation)
+            self.realTravelled = travelledDistance/1609.34
+            self.realTravelled = Double(round(100*self.realTravelled)/100)
+            self.travellingLabel.text = "Distance travelled: \(realTravelled) miles."
+            let center = CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
+            self.travellingMapView.setRegion(region, animated: true)
+        }
+    }
+    
+    func mapView(mapView: MKMapView!, rendererForOverlay overlay: MKOverlay!) -> MKOverlayRenderer! {
+        if overlay is MKPolyline {
+            var polylineRenderer = MKPolylineRenderer(overlay: overlay)
+            polylineRenderer.strokeColor = UIColor.blueColor()
+            polylineRenderer.lineWidth = 4
+            return polylineRenderer
+        }
+        return nil
+    }
+    
+    func displayMenuAlertWhenTravelling() {
+        self.displayOkayAlert("Menu unavailable", message: "Menu is temporarily disabled in order to accurately track your miles.")
     }
     
     func checkIfDriving() -> Void {
@@ -291,6 +344,51 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             self.pickupAddress.text = address
             self.pickupAddressVar = address
         })
+    }
+    
+    func checkForPendingExperience() -> Void {
+        if currentUser != nil {
+            let userQuery = PFQuery(className: "rider")
+            userQuery.whereKey("username", equalTo:self.currentUser!.username!)
+            userQuery.getFirstObjectInBackgroundWithBlock {
+                (userObject: PFObject?, error: NSError?) -> Void in
+                if error == nil && userObject != nil {
+                    let newExperience = userObject!["pendingExperience"] as! Double
+                    if(newExperience > 0) {
+                        self.displayOkayAlert("New experience recorded", message: "\(newExperience) points has been added to your experience.")
+                    }
+                    PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                        if let currentUser = currentUser as? PFUser {
+                            let currExperience = currentUser["experience"] as! String
+                            let convertedExperience = Double(currExperience)
+                            let newExperience = convertedExperience! + newExperience
+                            print(newExperience)
+                            currentUser["experience"] = "\(newExperience)"
+                            currentUser.saveInBackgroundWithBlock {
+                                (success: Bool, error: NSError?) -> Void in
+                                if (success) {
+                                    print("User experience has been updated.")
+                                    userObject!["pendingExperience"] = 0
+                                    userObject!.saveInBackgroundWithBlock {
+                                        (success: Bool, error: NSError?) -> Void in
+                                        if (success) {
+                                            print("User pending experience has been reset.")
+                                        } else {
+                                            print("Error - checkForPendingExperience: \(error!) \(error!.description)")
+                                        }
+                                    }
+                                } else {
+                                    print("Error - checkForPendingExperience: \(error!) \(error!.description)")
+                                }
+                            }
+                        }
+                    })
+                    
+                } else {
+                    print("Error2 - checkForPendingExperience: \(error!) \(error!.description)")
+                }
+            }
+        }
     }
     
     // Name: tableView
@@ -425,6 +523,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     
                     // Get information from database on each driver from pendingDriversArray
                     for driverUser in self.pendingDriversArray {
+                        print(driverUser)
                         let query = PFQuery(className: "_User")
                         query.whereKey("username", equalTo: driverUser)
                         query.getFirstObjectInBackgroundWithBlock {
@@ -663,12 +762,6 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         requestRideButton.setTitle("Request a ride?", forState: .Normal)
     }
     
-    @IBAction func driverArrivedDidTouch(sender: AnyObject) {
-        print("driver arrived")
-        self.displayOkayAlert("Starting mile tracker", message: "Let us know when you have arrived at your destination.")
-        self.letUsKnowLabel.text = "Let us know when you have arrived at your destination."
-    }
-    
     // Still have to update database
     @IBAction func driverArrived2DidTouch(sender: AnyObject) {
         print("driver arrived2")
@@ -698,10 +791,23 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     }
                 }
             }
-            // Start mile tracking
+            self.startLocation = nil
+            self.travelling = true
+            //self.travellingMapView.mapType = MKMapType.Satellite
+            self.locationManager.delegate = self
+            self.locationManager.desiredAccuracy = kCLLocationAccuracyBest //Accuracy
+            self.locationManager.requestWhenInUseAuthorization() //Authorization
+            self.locationManager.startUpdatingLocation()
+            self.travellingView.hidden = false
+            
+            // Remove menu temporarily
+//            self.view.removeGestureRecognizer(self.revealViewController().panGestureRecognizer())
+//            self.view.removeGestureRecognizer(self.revealViewController().tapGestureRecognizer())
+//            
+            //self.travellingLabel.text = "Tracking miles."
         } else if (self.primaryStatusLabel.text == "Travelling...") {
             // end adventure
-            self.displayOkayAlert("Ending ride.", message: "You have travelled 10 miles.")
+            self.displayOkayAlert("Ending ride.", message: "\(self.realTravelled) miles have been recorded and will be added to \(self.selectedDriver)'s account. Thank you for using FetchApp.")
             self.primaryStatusLabel.text = "Waiting for user."
             self.driverArrived2Button.hidden = true
             self.cancelRideButton.hidden = true
@@ -726,6 +832,38 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     } else {
                         print("Error17 - driverArrived2DidTouch: \(error!) \(error!.description)")
                     }
+                }
+            }
+            self.travelling = false
+            self.travellingView.hidden = true
+            self.locationManager.stopUpdatingLocation()
+            print("Distance travelled = \(self.realTravelled)")
+//            if self.revealViewController() != nil {
+//                menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
+//                self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
+//                self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
+//            }
+            
+            // Add miles to friend
+            let friendQuery = PFQuery(className: "rider")
+            friendQuery.whereKey("username", equalTo:self.selectedDriver)
+            friendQuery.getFirstObjectInBackgroundWithBlock {
+                (friendObject: PFObject?, error: NSError?) -> Void in
+                if error == nil && friendObject != nil {
+                    let experience = friendObject!["pendingExperience"] as! Double
+                    var convertedExperience:Double = Double(experience)
+                    convertedExperience += self.realTravelled
+                    friendObject!["pendingExperience"] = convertedExperience
+                    friendObject!.saveInBackgroundWithBlock {
+                        (success: Bool, error: NSError?) -> Void in
+                        if (success) {
+                            print("Friend pending experience has been updated")
+                        } else {
+                            print("Error -- Could not update friend experience: \(error!) \(error!.description)")
+                        }
+                    }
+                } else {
+                    print("Error2 -- Could not update friend experience: \(error!) \(error!.description)")
                 }
             }
         }
@@ -853,6 +991,12 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         }
     }
     
+    @IBAction func menuButtonDidTouch(sender: AnyObject) {
+        if(travelling == true) {
+            self.displayMenuAlertWhenTravelling()
+        }
+    }
+    
     /*
      * Overrided Functions
      */
@@ -860,6 +1004,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // Hide views
         self.taskView.hidden = true
         self.driverView.hidden = true
+        self.travellingView.hidden = true
         self.viewToDim.hidden = true
         self.letUsKnowLabel.hidden = true
         self.driverArrived2Button.hidden = true
@@ -877,6 +1022,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         self.taskDriverInfoLabel.text = "You currently are not driving anyone. Check your friend's list to see if anyone needs a ride."
         self.taskPickupAddress.text = "N/A"
         self.taskDropoffAddress.text = "N/A"
+        
+        // Check for pendingExperience
+        self.checkForPendingExperience()
         
         // If this is the first time the application has been opened...
         if (self.firstOpen == true) {
@@ -901,6 +1049,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                 request["driver"] = ""
                 request["pendingDriver"] = ""
                 request["distance"] = "0"
+                request["pendingExperience"] = 0
                 request["status"] = "Waiting for user."
                 
                 // 2.3) Search the "rider" class in database for the user
