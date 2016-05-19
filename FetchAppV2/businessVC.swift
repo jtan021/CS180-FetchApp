@@ -111,7 +111,7 @@ class businessVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let businessName = self.businessArray[indexPath.row].businessName
         let businessQuery = PFQuery(className: "business")
         businessQuery.whereKey("username", equalTo: self.currentUser!.username!)
-        businessQuery.whereKey("groupName", equalTo: businessName)
+        businessQuery.whereKey("businessName", equalTo: businessName)
         businessQuery.getFirstObjectInBackgroundWithBlock {
             (groupObject: PFObject?, error: NSError?) -> Void in
             if (error == nil) {
