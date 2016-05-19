@@ -423,7 +423,7 @@ class businessVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         if self.revealViewController() != nil {
             menuButton.action = #selector(SWRevealViewController.revealToggle(_:))
             self.view.addGestureRecognizer(self.revealViewController().panGestureRecognizer())
-            self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
+            //self.view.addGestureRecognizer(self.revealViewController().tapGestureRecognizer())
         }
         
         let refreshControl = UIRefreshControl()

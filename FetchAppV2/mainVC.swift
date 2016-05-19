@@ -97,6 +97,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     @IBOutlet weak var travellingView: UIView!
     @IBOutlet weak var travellingMapView: MKMapView!
     @IBOutlet weak var travellingLabel: UILabel!
+    @IBOutlet weak var refreshTableButton: UIButton!
     
     
     /*
@@ -731,6 +732,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         cancelRideButton.hidden = false
         requestRideButton.hidden = true
         driverTableView.hidden = false
+        refreshTableButton.hidden = false
         selectADriverLabel.hidden = false
         requestCancel = true
         self.displayOkayAlert("Ride request sent", message: "Searching for a friendly driver.")
@@ -790,6 +792,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         cancelRideButton.hidden = true
         requestRideButton.hidden = false
         driverTableView.hidden = true
+        refreshTableButton.hidden = true
         selectADriverLabel.hidden = true
         requestCancel = false
         requestRideButton.setTitle("Request a ride?", forState: .Normal)
@@ -886,8 +889,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             friendQuery.getFirstObjectInBackgroundWithBlock {
                 (friendObject: PFObject?, error: NSError?) -> Void in
                 if error == nil && friendObject != nil {
-                    let experience = friendObject!["pendingExperience"] as! Double
-                    var convertedExperience:Double = Double(experience)
+                    let experience = friendObject!["pendingExperience"] as! String
+                    var convertedExperience:Double = Double(experience)!
                     convertedExperience += self.realTravelled
                     friendObject!["pendingExperience"] = convertedExperience
                     friendObject!.saveInBackgroundWithBlock {
@@ -936,6 +939,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                         })
                         self.refresh(UIRefreshControl())
                         self.driverTableView.hidden = true
+                        self.refreshTableButton.hidden = true
                         self.driverView.hidden = true
                         self.viewToDim.hidden = true
                         
@@ -1027,10 +1031,9 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         }
     }
     
-    @IBAction func menuButtonDidTouch(sender: AnyObject) {
-        if(travelling == true) {
-            self.displayMenuAlertWhenTravelling()
-        }
+    @IBAction func refreshDidTouch(sender: AnyObject) {
+        self.populatePendingDriversTable()
+        self.driverTableView.reloadData()
     }
     
     /*
@@ -1169,6 +1172,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                             self.requestRideButton.hidden = false
                         } else {
                             self.driverTableView.hidden = false
+                            self.refreshTableButton.hidden = false
                             self.selectADriverLabel.hidden = false
                             self.pickupAddress.text = object!["pickupAddress"] as? String
                             self.pickupAddressVar = object!["pickupAddress"] as? String
@@ -1197,6 +1201,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 self.letUsKnowLabel.hidden = false
                                 self.driverArrived2Button.setTitle("\(self.selectedDriver) has arrived.", forState: .Normal)
                                 self.driverTableView.hidden = true
+                                self.refreshTableButton.hidden = true
                                 self.selectADriverLabel.hidden = true
                                 self.driverArrived2Button.hidden = false
                                 self.cancelRideButton.hidden = true
@@ -1207,6 +1212,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                 self.driverArrived2Button.setTitle("I have arrived at my destination.", forState: .Normal)
                                 self.letUsKnowLabel.hidden = false
                                 self.driverTableView.hidden = true
+                                self.refreshTableButton.hidden = true
                                 self.selectADriverLabel.hidden = true
                                 self.driverArrived2Button.hidden = false
                                 self.cancelRideButton.hidden = true
@@ -1232,8 +1238,10 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
         // Hide driverTableView and corresponding label at start
         if(primaryStatusLabel.text == "Waiting for user.") {
             driverTableView.hidden = true
+            refreshTableButton.hidden = true
             selectADriverLabel.hidden = true
         } else {
+            refreshTableButton.hidden = false
             driverTableView.hidden = false
             selectADriverLabel.hidden = false
         }

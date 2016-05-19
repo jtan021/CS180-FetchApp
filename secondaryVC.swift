@@ -113,6 +113,13 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         self.editProfilePhoneNumber.resignFirstResponder()
     }
     
+//    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldReceiveTouch touch: UITouch) -> Bool {
+//        if (touch.view == self.friendTableView || touch.view == self.rankingTableView || touch.view == self.groupTableView) {
+//            return false
+//        }
+//        return true
+//    }
+    
     // displayFindFriendAlert
     // Inputs: Title: String, Message: String
     // Output: UIAlertController
@@ -604,7 +611,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.rankViewProfilePic.image = self.rankArray[indexPath.row].profilePic
             self.rankViewToDim.hidden = false
             self.rankingSelectedUserView.hidden = false
-        } else { //Tableview == groupTableView
+        } else if (tableView == self.groupTableView) { //Tableview == groupTableView
             if(indexPath.row == 0) {
                 self.updateFriendsTable()
                 self.groupView.hidden = true
@@ -773,7 +780,42 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         self.rankLevelArray.removeAll()
         self.rankUsernameArray.removeAll()
         self.rankArray.removeAll()
+        
+        // Add user to ranking
         if currentUser != nil {
+            PFUser.currentUser()!.fetchInBackgroundWithBlock({ (currentUser: PFObject?, error: NSError?) -> Void in
+                if let currentUser = currentUser as? PFUser {
+                    let firstName = currentUser["firstName"] as! String
+                    let lastName = currentUser["lastName"] as! String
+                    let userExperience = currentUser["experience"] as! String
+                    let userFullName = "\(firstName) \(lastName)"
+                    let userLevel = currentUser["level"] as! String
+                    let profilePicData = currentUser["profilePic"] as! PFFile
+                    profilePicData.getDataInBackgroundWithBlock({
+                        (imageData: NSData?, error: NSError?) -> Void in
+                        if (error == nil) {
+                            let profilePic = UIImage(data:imageData!)
+                            self.rankArray.append(rankItem(fullName: "\(userFullName)", username: "\(self.currentUser!.username!)", level: "\(userLevel)", experience: "\(userExperience)", profilePic: profilePic!))
+                            print(firstName)
+                            // Now sort the array
+                            let result = self.rankArray.sortInPlace {
+                                switch ($0.level,$1.level) {
+                                // if neither “category" is nil and contents are equal,
+                                case let (lhs,rhs) where lhs == rhs:
+                                    // compare “status” (> because DESC order)
+                                    return $0.experience > $1.experience
+                                // else just compare “category” using <
+                                case let (lhs, rhs):
+                                    return lhs > rhs
+                                }
+                            }
+                            self.rankingTableView.reloadData()
+                        }
+                    })
+                }
+            })
+            
+            // Add friends
             let userQuery = PFQuery(className: "friends")
             userQuery.whereKey("username", equalTo: currentUser!.username!)
             userQuery.getFirstObjectInBackgroundWithBlock {
@@ -1395,6 +1437,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
         // Adds gesture so keyboard is dismissed when areas outside of editable text are tapped
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(secondaryVC.DismissKeyboard))
         view.addGestureRecognizer(tap)
+        tap.cancelsTouchesInView = false
         
         // Add refresh action to driverTableView
         // Pull down to refresh
