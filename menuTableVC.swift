@@ -182,7 +182,7 @@ class menuTableVC: UITableViewController {
                                 print("Error - profile: \(error!) \(error!.description)")
                             }
                         }
-                        //self.tableView.reloadData()
+                        self.tableView.reloadData()
                     }
                 })
             }
