@@ -22,6 +22,7 @@ class menuTableVC: UITableViewController {
     var returnFromEdit:Bool = true
     var pickupDropOff:Bool = false
     var distance: Double = 0
+    var sawRiderAlert: Bool = false
     
     /*
     * Custom functions
@@ -363,6 +364,7 @@ class menuTableVC: UITableViewController {
             print(distance)
             self.updateDistance(self.pickupCoordinate, coordinate2: self.dropoffCoordinate)
             destinationVC.distance = self.distance;
+            destinationVC.sawRiderAlert = self.sawRiderAlert;
             print(distance)
         } else if (segue.identifier == "friendListSegue") {
             let DestViewController = segue.destinationViewController as! UINavigationController

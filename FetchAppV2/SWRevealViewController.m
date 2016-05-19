@@ -682,6 +682,7 @@ const int FrontViewPositionNone = 0xff;
     _dropoffAddress = @"";
     _dropoffCoordinate = CLLocationCoordinate2DMake(0, 0);
     _distance = 0;
+    _sawRiderAlert = NO;
 }
 
 
@@ -1927,6 +1928,7 @@ NSString * const SWSegueRightIdentifier = @"sw_right";
         destinationVC.dropoffAddressVar = _dropoffAddress;
         destinationVC.dropoffCoordinate = _dropoffCoordinate;
         destinationVC.distance = _distance;
+        destinationVC.sawRiderAlert = _sawRiderAlert;
     } else if([segue.identifier isEqualToString:SWSegueRearIdentifier])
     {
         menuTableVC *destinationVC = [segue destinationViewController];
@@ -1937,6 +1939,7 @@ NSString * const SWSegueRightIdentifier = @"sw_right";
         destinationVC.dropoffAddress = _dropoffAddress;
         destinationVC.dropoffCoordinate = _dropoffCoordinate;
         destinationVC.distance = _distance;
+        destinationVC.sawRiderAlert = _sawRiderAlert;
     }
 }
 

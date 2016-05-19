@@ -68,6 +68,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     typealias CompletionHandler = (success:Bool) -> Void
     var travelling:Bool = false
     var myLocations: [CLLocation] = []
+    var sawRiderAlert: Bool = false
     /*
      * Outlets
      */
@@ -227,7 +228,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     func checkIfDriving() -> Void {
         let riderQuery = PFQuery(className: "rider")
         riderQuery.whereKey("driver", equalTo: (self.currentUser!.username!))
-        if(self.firstOpen == true) {
+        if(self.sawRiderAlert == false) {
             riderQuery.getFirstObjectInBackgroundWithBlock {
                 (riderObject: PFObject?, error: NSError?) -> Void in
                 if error != nil || riderObject == nil {
@@ -247,6 +248,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     self.taskPickupAddress.text = "\(self.riderPickupAddress)"
                     self.taskDropoffAddress.text = "\(self.riderDropoffAddress)"
                     self.displayRiderAlert()
+                    self.sawRiderAlert = true
                 }
             }
         } else {
@@ -860,6 +862,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                     (userObject: PFObject?, error: NSError?) -> Void in
                     if error == nil && userObject != nil {
                         userObject!["status"] = "Waiting for user."
+                        userObject!["rider"] = ""
                         userObject!.saveInBackgroundWithBlock {
                             (success: Bool, error: NSError?) -> Void in
                             if (success) {
@@ -889,8 +892,8 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
             friendQuery.getFirstObjectInBackgroundWithBlock {
                 (friendObject: PFObject?, error: NSError?) -> Void in
                 if error == nil && friendObject != nil {
-                    let experience = friendObject!["pendingExperience"] as! String
-                    var convertedExperience:Double = Double(experience)!
+                    let experience = friendObject!["pendingExperience"] as! Double
+                    var convertedExperience:Double = Double(experience)
                     convertedExperience += self.realTravelled
                     friendObject!["pendingExperience"] = convertedExperience
                     friendObject!.saveInBackgroundWithBlock {

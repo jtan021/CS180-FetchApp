@@ -31,6 +31,7 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
     var dropoffAddress: String?
     var dropoffCoordinate: CLLocationCoordinate2D?
     var distance: Double = 0
+    var sawRiderAlert: Bool = false
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapPin: UIImageView!
@@ -156,6 +157,7 @@ class mapSearchVC: UIViewController, UIGestureRecognizerDelegate {
                     destinationVC.dropoffCoordinate = self.dropoffCoordinate!
                 }
             }
+            destinationVC.sawRiderAlert = self.sawRiderAlert
             destinationVC.firstOpen = false
             destinationVC.returnFromEdit = true
             destinationVC.pickupDropOff = self.pickupDropOff!
