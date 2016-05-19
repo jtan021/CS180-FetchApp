@@ -17,6 +17,14 @@ protocol HandleMapSearch {
     func newLocationZoomIn(placemark:MKPlacemark)
 }
 
+struct pendingDriverItem {
+    var fullName: String
+    var username: String
+    var level: String
+    var distance: String
+    var profilePic: UIImage
+}
+
 class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, UISearchBarDelegate, UISearchControllerDelegate, UIGestureRecognizerDelegate, MFMessageComposeViewControllerDelegate {
 
     /*
@@ -50,14 +58,15 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     var chosenPlaceMark: MKPlacemark? = nil
     var status:String = ""
     var pendingList: String = ""
+    var pendingDriverArray = [pendingDriverItem]()
     var pendingListArray = [String]()
     var friendPhoneNumberArray = [String]()
-    var pendingFriendFullNameArray = [String]()
-    var pendingFriendUsernameArray = [String]()
-    var pendingFriendLevelArray = [String]()
-    var pendingFriendDistanceArray = [String]()
+//    var pendingFriendFullNameArray = [String]()
+//    var pendingFriendUsernameArray = [String]()
+//    var pendingFriendLevelArray = [String]()
+//    var pendingFriendDistanceArray = [String]()
     var pendingDriversArray = [String]()
-    var pendingFriendProfilePicArray = [UIImage]()
+//    var pendingFriendProfilePicArray = [UIImage]()
     var pendingDistance:Double = -1
     var friendLocationLAT:Double = 0
     var friendLocationLONG:Double = 0
@@ -432,7 +441,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Outputs: None
     // Function: Sets the numberOfRowsInSection of table to pendingFriendFullNameArray.count
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.pendingFriendFullNameArray.count
+        return self.pendingDriverArray.count
     }
     
     // Name: tableView
@@ -441,10 +450,10 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Function: Updates the tableView availableDriverCells with their specific information given by pending*Arrays
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("driverCell", forIndexPath: indexPath) as! availableDriverCell
-        cell.driverName.text = self.pendingFriendFullNameArray[indexPath.row]
-        cell.driverLevel.text = self.pendingFriendLevelArray[indexPath.row]
-        cell.driverDistance.text = self.pendingFriendDistanceArray[indexPath.row]
-        cell.profilePic.image = self.pendingFriendProfilePicArray[indexPath.row]
+        cell.driverName.text = self.pendingDriverArray[indexPath.row].fullName
+        cell.driverLevel.text = self.pendingDriverArray[indexPath.row].level
+        cell.driverDistance.text = self.pendingDriverArray[indexPath.row].distance
+        cell.profilePic.image = self.pendingDriverArray[indexPath.row].profilePic
         if(cell.driverDistance.text == "Getting distance...") {
             self.refresh(UIRefreshControl())
         }
@@ -458,11 +467,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         // do select for driver
         print("selected pending user")
-        self.selectedDriver = self.pendingFriendUsernameArray[indexPath.row]
-        self.driverViewFullName.text = self.pendingFriendFullNameArray[indexPath.row]
-        self.driverViewUsername.text = self.pendingFriendUsernameArray[indexPath.row]
-        self.driverViewLevel.text = self.pendingFriendLevelArray[indexPath.row]
-        self.driverViewPic.image = self.pendingFriendProfilePicArray[indexPath.row]
+        self.selectedDriver = self.pendingDriverArray[indexPath.row].username
+        self.driverViewFullName.text = self.pendingDriverArray[indexPath.row].fullName
+        self.driverViewUsername.text = self.pendingDriverArray[indexPath.row].username
+        self.driverViewLevel.text = self.pendingDriverArray[indexPath.row].level
+        self.driverViewPic.image = self.pendingDriverArray[indexPath.row].profilePic
         self.viewToDim.hidden = false
         self.driverView.hidden = false
         
@@ -537,11 +546,12 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
     // Function: Queries database for pending drivers and updates the pending*arrays with the corresponding information for each pending driver.
     func populatePendingDriversTable() -> Void {
         // Clear pending*arrays
-        self.pendingFriendFullNameArray.removeAll()
-        self.pendingFriendDistanceArray.removeAll()
-        self.pendingFriendLevelArray.removeAll()
-        self.pendingFriendUsernameArray.removeAll()
-        self.pendingFriendProfilePicArray.removeAll()
+        self.pendingDriverArray.removeAll()
+//        self.pendingFriendFullNameArray.removeAll()
+//        self.pendingFriendDistanceArray.removeAll()
+//        self.pendingFriendLevelArray.removeAll()
+//        self.pendingFriendUsernameArray.removeAll()
+//        self.pendingFriendProfilePicArray.removeAll()
         
         // Query database for pendingDrivers
         if currentUser != nil {
@@ -582,7 +592,7 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                     (imageData: NSData?, error: NSError?) -> Void in
                                     if (error == nil) {
                                         let profilePic = UIImage(data:imageData!)
-                                        self.pendingFriendProfilePicArray.append(profilePic!)
+//                                        self.pendingFriendProfilePicArray.append(profilePic!)
                                         print(profilePic!)
                                         let userCoordinate = CLLocationCoordinate2DMake(self.userLocationLAT, self.userLocationLONG)
                                         let friendCoordinate = CLLocationCoordinate2DMake(self.friendLocationLAT, self.friendLocationLONG)
@@ -590,10 +600,11 @@ class mainVC: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate, U
                                             print("both coordinates valid")
                                             self.updatePendingDistance(self.pickupCoordinate, coordinate2: friendCoordinate, completionHandler: { (success) -> Void in
                                                 if(success) {
-                                                    self.pendingFriendDistanceArray.append("\(self.pendingDistance) miles")
-                                                    self.pendingFriendFullNameArray.append(fullName)
-                                                    self.pendingFriendLevelArray.append("Level \(level)")
-                                                    self.pendingFriendUsernameArray.append(driverUser)
+                                                    self.pendingDriverArray.append(pendingDriverItem(fullName: fullName, username: driverUser, level: "Level \(level)", distance: "\(self.pendingDistance) miles", profilePic: profilePic!))
+//                                                    self.pendingFriendDistanceArray.append("\(self.pendingDistance) miles")
+//                                                    self.pendingFriendFullNameArray.append(fullName)
+//                                                    self.pendingFriendLevelArray.append("Level \(level)")
+//                                                    self.pendingFriendUsernameArray.append(driverUser)
                                                     self.driverTableView.reloadData()
                                                 }
                                             })

@@ -24,17 +24,27 @@ struct groupItem {
     var members: String
 }
 
+struct friendItem {
+    var fullName: String
+    var username: String
+    var level: String
+    var status: String
+    var statusImage: UIImage
+    var profilePic: UIImage
+}
+
 class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
     var currentUser = PFUser.currentUser()
-    var friendNameArray = [String]()
+    var friendArray = [friendItem]()
+//    var friendNameArray = [String]()
     var friendUsernameArray = [String]()
-    var friendLevelArray = [String]()
-    var friendStatusArray = [String]()
-    var friendStatusImageArray = [UIImage]()
-    var friendProfilePicArray = [UIImage]()
-    var rankNameArray = [String]()
+//    var friendLevelArray = [String]()
+//    var friendStatusArray = [String]()
+//    var friendStatusImageArray = [UIImage]()
+//    var friendProfilePicArray = [UIImage]()
+//    var rankNameArray = [String]()
     var rankUsernameArray = [String]()
-    var rankLevelArray = [String]()
+//    var rankLevelArray = [String]()
     var userFriend:String?
     var inputTextField: UITextField?
     var groupInputTextField: UITextField?
@@ -526,7 +536,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     // Function: Sets the numberOfRowsInSection of table
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if(tableView == self.friendTableView) {
-            return friendNameArray.count
+            return friendArray.count
         } else if (tableView == self.rankingTableView) {
             print(rankArray.count)
             return rankArray.count
@@ -542,10 +552,10 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         if(tableView == self.friendTableView) {
             let friendCell = tableView.dequeueReusableCellWithIdentifier("friendCell", forIndexPath: indexPath) as! friendsCell
-            friendCell.name.text = friendNameArray[indexPath.row]
-            friendCell.level.text = friendLevelArray[indexPath.row]
-            friendCell.status.image = friendStatusImageArray[indexPath.row]
-            friendCell.profilePic.image = friendProfilePicArray[indexPath.row]
+            friendCell.name.text = self.friendArray[indexPath.row].fullName
+            friendCell.level.text = self.friendArray[indexPath.row].level
+            friendCell.status.image = self.friendArray[indexPath.row].statusImage
+            friendCell.profilePic.image = self.friendArray[indexPath.row].profilePic
             return friendCell
         } else if (tableView == self.rankingTableView) {
             let rankCell = tableView.dequeueReusableCellWithIdentifier("rankingCell", forIndexPath: indexPath) as! rankingsCell
@@ -569,13 +579,12 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         print("selected cell")
         if(tableView == self.friendTableView) {
-            if(friendStatusArray[indexPath.row] == "red") {
-                self.requestFullName.text = self.friendNameArray[indexPath.row]
-                self.requestUsername.text = self.friendUsernameArray[indexPath.row]
-                self.requestUserPic.image = self.friendProfilePicArray[indexPath.row]
-                print(self.friendUsernameArray[indexPath.row])
+            if(self.friendArray[indexPath.row].status == "red") {
+                self.requestFullName.text = self.friendArray[indexPath.row].fullName
+                self.requestUsername.text = self.friendArray[indexPath.row].username
+                self.requestUserPic.image = self.friendArray[indexPath.row].profilePic
                 let userQuery = PFQuery(className: "rider")
-                userQuery.whereKey("username", equalTo: self.friendUsernameArray[indexPath.row])
+                userQuery.whereKey("username", equalTo: self.friendArray[indexPath.row].username)
                 userQuery.getFirstObjectInBackgroundWithBlock {
                     (userObject: PFObject?, error: NSError?) -> Void in
                     if error != nil || userObject == nil {
@@ -593,10 +602,10 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                     }
                 }
             } else {
-                self.inactiveRequestFullName.text = self.friendNameArray[indexPath.row]
-                self.inactiveRequestUsername.text = self.friendUsernameArray[indexPath.row]
-                self.inactiveRequestLevel.text = self.friendLevelArray[indexPath.row]
-                self.inactiveRequestImage.image = self.friendProfilePicArray[indexPath.row]
+                self.inactiveRequestFullName.text = self.friendArray[indexPath.row].fullName
+                self.inactiveRequestUsername.text = self.friendArray[indexPath.row].username
+                self.inactiveRequestLevel.text = self.friendArray[indexPath.row].level
+                self.inactiveRequestImage.image = self.friendArray[indexPath.row].profilePic
                 self.friendListViewToDim.hidden = false
                 self.inactiveRequestView.hidden = false
             }
@@ -640,10 +649,11 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                 let selectedUsername = friendUsernameArray[indexPath.row]
                 let alert = UIAlertController(title: "Delete friend", message: "Are you sure you want to remove \(selectedUsername) from your friend's list?", preferredStyle:  UIAlertControllerStyle.Alert)
                 alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
-                    self.friendNameArray.removeAtIndex(indexPath.row)
+                    self.friendArray.removeAtIndex(indexPath.row)
+//                    self.friendNameArray.removeAtIndex(indexPath.row)
                     self.friendUsernameArray.removeAtIndex(indexPath.row)
-                    self.friendLevelArray.removeAtIndex(indexPath.row)
-                    self.friendStatusArray.removeAtIndex(indexPath.row)
+//                    self.friendLevelArray.removeAtIndex(indexPath.row)
+//                    self.friendStatusArray.removeAtIndex(indexPath.row)
                     self.friendTableView.reloadData()
                     if self.currentUser?.username! != nil {
                         let query = PFQuery(className: "friends")
@@ -717,11 +727,12 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     }
     
     func updateFriendsTable() -> Void {
-        self.friendStatusArray.removeAll()
-        self.friendStatusImageArray.removeAll()
-        self.friendNameArray.removeAll()
-        self.friendLevelArray.removeAll()
-        self.friendUsernameArray.removeAll()
+        self.friendArray.removeAll()
+//        self.friendStatusArray.removeAll()
+//        self.friendStatusImageArray.removeAll()
+//        self.friendNameArray.removeAll()
+//        self.friendLevelArray.removeAll()
+//        self.friendUsernameArray.removeAll()
         if currentUser != nil {
             let userQuery = PFQuery(className: "friends")
             userQuery.whereKey("username", equalTo: currentUser!.username!)
@@ -752,19 +763,23 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                                     (imageData: NSData?, error: NSError?) -> Void in
                                     if (error == nil) {
                                         let profilePic = UIImage(data:imageData!)
-                                        self.friendProfilePicArray.append(profilePic!)
+//                                        self.friendProfilePicArray.append(profilePic!)
                                         if(status == "red") {
-                                            self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
+                                            self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "redStatus")!, profilePic: profilePic!))
+                                            
+//                                            self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
                                         } else if(status == "green") {
-                                            self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
+                                            self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "greenStatus")!, profilePic: profilePic!))
+//                                            self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
                                         } else {
-                                            self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
+                                            self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "greyStatus")!, profilePic: profilePic!))
+//                                            self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
                                         }
-                                        self.friendNameArray.append(fullName)
-                                        self.friendLevelArray.append("Level \(level)")
-                                        self.friendStatusArray.append(status)
+//                                        self.friendNameArray.append(fullName)
+//                                        self.friendLevelArray.append("Level \(level)")
+//                                        self.friendStatusArray.append(status)
                                         self.friendTableView.reloadData()
-                                        print(self.friendNameArray[0])
+//                                        print(self.friendNameArray[0])
                                     }
                                 })
                             }
@@ -776,9 +791,9 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
     }
     
     func updateRankingTable() -> Void {
-        self.rankNameArray.removeAll()
-        self.rankLevelArray.removeAll()
-        self.rankUsernameArray.removeAll()
+//        self.rankNameArray.removeAll()
+//        self.rankLevelArray.removeAll()
+//        self.rankUsernameArray.removeAll()
         self.rankArray.removeAll()
         
         // Add user to ranking
@@ -1321,10 +1336,11 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.displayOkayAlert("Error", message: "Cannot display this group because there are no members.")
             return
         }
-        self.friendStatusArray.removeAll()
-        self.friendStatusImageArray.removeAll()
-        self.friendNameArray.removeAll()
-        self.friendLevelArray.removeAll()
+//        self.friendStatusArray.removeAll()
+//        self.friendStatusImageArray.removeAll()
+//        self.friendNameArray.removeAll()
+//        self.friendLevelArray.removeAll()
+        self.friendArray.removeAll()
         self.friendUsernameArray.removeAll()
         let groupQuery = PFQuery(className: "groups")
         groupQuery.whereKey("username", equalTo: self.currentUser!.username!)
@@ -1358,19 +1374,30 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                                 (imageData: NSData?, error: NSError?) -> Void in
                                 if (error == nil) {
                                     let profilePic = UIImage(data:imageData!)
-                                    self.friendProfilePicArray.append(profilePic!)
                                     if(status == "red") {
-                                        self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
+                                        self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "redStatus")!, profilePic: profilePic!))
+                                        
+                                        //                                            self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
                                     } else if(status == "green") {
-                                        self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
+                                        self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "greenStatus")!, profilePic: profilePic!))
+                                        //                                            self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
                                     } else {
-                                        self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
+                                        self.friendArray.append(friendItem(fullName: fullName, username: username, level: "Level \(level)", status: status, statusImage: UIImage(named: "greyStatus")!, profilePic: profilePic!))
+                                        //                                            self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
                                     }
-                                    self.friendNameArray.append(fullName)
-                                    self.friendLevelArray.append("Level \(level)")
-                                    self.friendStatusArray.append(status)
+//                                    self.friendProfilePicArray.append(profilePic!)
+//                                    if(status == "red") {
+//                                        self.friendStatusImageArray.append(UIImage(named: "redStatus")!)
+//                                    } else if(status == "green") {
+//                                        self.friendStatusImageArray.append(UIImage(named: "greenStatus")!)
+//                                    } else {
+//                                        self.friendStatusImageArray.append(UIImage(named: "greyStatus")!)
+//                                    }
+//                                    self.friendNameArray.append(fullName)
+//                                    self.friendLevelArray.append("Level \(level)")
+//                                    self.friendStatusArray.append(status)
                                     self.friendTableView.reloadData()
-                                    print(self.friendNameArray[0])
+//                                    print(self.friendNameArray[0])
                                 }
                             })
                         }
@@ -1455,10 +1482,10 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
             self.updateGroupTable()
             self.rankingView.hidden = true
             // Populate friend's table
-            self.friendStatusArray.removeAll()
-            self.friendStatusImageArray.removeAll()
-            self.friendNameArray.removeAll()
-            self.friendLevelArray.removeAll()
+//            self.friendStatusArray.removeAll()
+//            self.friendStatusImageArray.removeAll()
+//            self.friendNameArray.removeAll()
+//            self.friendLevelArray.removeAll()
             self.friendUsernameArray.removeAll()
             self.updateFriendsTable()
             
