@@ -1273,6 +1273,7 @@ class secondaryVC: UIViewController, CLLocationManagerDelegate, UITableViewDeleg
                 var friendsInGroupArray = [String]()
                 friendsInGroupArray = friendsInGroup.componentsSeparatedByString(",")
                 for username in friendsInGroupArray {
+                    self.friendUsernameArray.append(username)
                     let query = PFQuery(className: "_User")
                     query.whereKey("username", equalTo: username)
                     query.getFirstObjectInBackgroundWithBlock {
