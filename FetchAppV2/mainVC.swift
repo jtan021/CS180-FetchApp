@@ -10,7 +10,7 @@ import UIKit
 import Parse
 import MapKit
 import CoreLocation
-import QuartzCore
+//import QuartzCore
 import MessageUI
 
 protocol HandleMapSearch {
