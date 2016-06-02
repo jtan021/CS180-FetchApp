@@ -2956,7 +2956,8 @@
                                                                     <exclude reference="AX7-Kk-3ey"/>
                                                                 </mask>
                                                             </variation>
-                                                            <variation key="heightClass=regular-widthClass=compact">
+                                                            <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
+                                                                <rect key="frame" x="123" y="6" width="109" height="25"/>
                                                                 <mask key="constraints">
                                                                     <include reference="AX7-Kk-3ey"/>
                                                                 </mask>
@@ -2975,7 +2976,8 @@
                                                                     <exclude reference="JvS-Sp-HQr"/>
                                                                 </mask>
                                                             </variation>
-                                                            <variation key="heightClass=regular-widthClass=compact">
+                                                            <variation key="heightClass=regular-widthClass=compact" misplaced="YES">
+                                                                <rect key="frame" x="123" y="31" width="109" height="25"/>
                                                                 <mask key="constraints">
                                                                     <include reference="JvS-Sp-HQr"/>
                                                                 </mask>
@@ -4872,7 +4874,7 @@
                                         </variation>
                                     </imageView>
                                 </subviews>
-                                <color key="backgroundColor" red="0.36183059569999998" green="0.77279504600000004" blue="0.27212287540000002" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstItem="rUO-vH-6co" firstAttribute="top" secondItem="sze-FN-FIY" secondAttribute="top" constant="10" id="1zQ-DN-Pfo">
                                         <variation key="heightClass=regular-widthClass=compact" constant="12"/>

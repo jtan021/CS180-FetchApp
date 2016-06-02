@@ -41,10 +41,7 @@
 		169A56601CD99B2300D97A82 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 169A565F1CD99B2300D97A82 /* libz.tbd */; };
 		169A56621CD99B2900D97A82 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 169A56611CD99B2900D97A82 /* libsqlite3.tbd */; };
 		169A56681CD99C9F00D97A82 /* mainVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56671CD99C9F00D97A82 /* mainVC.swift */; };
-		169A566B1CD9A4BC00D97A82 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 169A566A1CD9A4BC00D97A82 /* Default.png */; };
-		169A566E1CD9A4D700D97A82 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 169A566D1CD9A4D700D97A82 /* Default@2x.png */; };
 		169A56701CD9A50E00D97A82 /* menuTableVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A566F1CD9A50E00D97A82 /* menuTableVC.swift */; };
-		169A56721CD9ABF200D97A82 /* formals_wow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 169A56711CD9ABF200D97A82 /* formals_wow.jpg */; };
 		169A56741CD9B30700D97A82 /* loginRegisterVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56731CD9B30700D97A82 /* loginRegisterVC.swift */; };
 		169A56771CD9BEB300D97A82 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56761CD9BEB300D97A82 /* User.swift */; };
 		169A56791CD9BF3D00D97A82 /* locationSearchTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */; };
@@ -112,10 +109,7 @@
 		169A56611CD99B2900D97A82 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		169A56631CD99BD200D97A82 /* FetchAppV2-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FetchAppV2-Bridging-Header.h"; sourceTree = "<group>"; };
 		169A56671CD99C9F00D97A82 /* mainVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mainVC.swift; sourceTree = "<group>"; };
-		169A566A1CD9A4BC00D97A82 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = ../../../../../../Downloads/SidebarDemo/SidebarDemo/Default.png; sourceTree = "<group>"; };
-		169A566D1CD9A4D700D97A82 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "../../../../../../Downloads/SidebarDemo/SidebarDemo/Default@2x.png"; sourceTree = "<group>"; };
 		169A566F1CD9A50E00D97A82 /* menuTableVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = menuTableVC.swift; path = ../menuTableVC.swift; sourceTree = "<group>"; };
-		169A56711CD9ABF200D97A82 /* formals_wow.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = formals_wow.jpg; path = ../../../../../formals_wow.jpg; sourceTree = "<group>"; };
 		169A56731CD9B30700D97A82 /* loginRegisterVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = loginRegisterVC.swift; path = ../loginRegisterVC.swift; sourceTree = "<group>"; };
 		169A56761CD9BEB300D97A82 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		169A56781CD9BF3D00D97A82 /* locationSearchTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = locationSearchTable.swift; sourceTree = "<group>"; };
@@ -303,9 +297,6 @@
 			isa = PBXGroup;
 			children = (
 				169A561A1CD9999200D97A82 /* Assets.xcassets */,
-				169A56711CD9ABF200D97A82 /* formals_wow.jpg */,
-				169A566A1CD9A4BC00D97A82 /* Default.png */,
-				169A566D1CD9A4D700D97A82 /* Default@2x.png */,
 			);
 			name = Resources;
 			path = FetchAppV2;
@@ -432,12 +423,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				169A56721CD9ABF200D97A82 /* formals_wow.jpg in Resources */,
 				169A561E1CD9999200D97A82 /* LaunchScreen.storyboard in Resources */,
 				169A561B1CD9999200D97A82 /* Assets.xcassets in Resources */,
-				169A566E1CD9A4D700D97A82 /* Default@2x.png in Resources */,
 				169A56191CD9999200D97A82 /* Main.storyboard in Resources */,
-				169A566B1CD9A4BC00D97A82 /* Default.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
